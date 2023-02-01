@@ -14,7 +14,7 @@ namespace PixelSandbox
 {
     public class PSSandboxSystem : ModSystem
     {
-        public static int PREFERED_CHUNKS = 12;
+        public static int PREFERED_CHUNKS = 8;
 
         public bool inited = false;
         public PSChunk[,] chunks = null;
@@ -26,9 +26,10 @@ namespace PixelSandbox
 
         public static TilePaintSystemV2 tilePaintSystem = null;
         public static TileDrawing tileDrawing;
-        public static LightingEngine lightingEngine;
+        public static LegacyLighting lightingEngine;
 
         public static bool chunkProcessing = false;
+        public static bool chunkFullLight = false;
         public int timeTag = 0;
 
         public static PSSandboxSystem Instance => _instance;
@@ -58,17 +59,15 @@ namespace PixelSandbox
             base.OnWorldLoad();
         }
 
-        public override void OnWorldUnload()
+        public override async void OnWorldUnload()
         {
-            Main.QueueMainThreadAction(() =>
+            while (recentChunks.Count > 0)
             {
-                while (recentChunks.Count > 0)
-                {
-                    _ = recentChunks[^1].SaveChunk(ChunkFilename(recentChunks[^1]));
-                    recentChunks.RemoveAt(recentChunks.Count - 1);
-                }
-                chunks = null;
-            });
+                await recentChunks[^1].SaveChunk(ChunkFilename(recentChunks[^1]));
+                recentChunks.RemoveAt(recentChunks.Count - 1);
+            }
+            chunks = null;
+            inited = false;
             base.OnWorldUnload();
         }
 
@@ -76,36 +75,42 @@ namespace PixelSandbox
         {
             behaviorShader = Mod.Assets.Request<Effect>(behaviorShaderPath, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
             On.Terraria.Graphics.Effects.FilterManager.EndCapture += ScreenEffectDecorator;
-            On.Terraria.GameContent.Drawing.TileDrawing.PostDrawTiles += DrawHook_TileEntities;
+            On.Terraria.Main.DrawCachedProjs += DrawHook_DrawCachedProjs;
             On.Terraria.Lighting.GetColor_int_int += LightColorDecorator;
 
             tilePaintSystem = Main.instance.TilePaintSystem;
             tileDrawing = new TileDrawing(tilePaintSystem);
-            lightingEngine = new LightingEngine();
+            lightingEngine = new LegacyLighting(Main.Camera);
             lightingEngine.Rebuild();
 
             base.Load();
         }
 
+        private void DrawHook_DrawCachedProjs(On.Terraria.Main.orig_DrawCachedProjs orig, Main self, List<int> projCache, bool startSpriteBatch)
+        {
+            if (projCache == Main.instance.DrawCacheProjsBehindNPCs)
+            {
+                if (!startSpriteBatch)
+                    Main.spriteBatch.End();
+                DrawChunks();
+                if (!startSpriteBatch)
+                    Main.spriteBatch.Begin();
+            }
+            orig(self, projCache, startSpriteBatch);
+        }
 
         public override void Unload()
         {
             On.Terraria.Graphics.Effects.FilterManager.EndCapture -= ScreenEffectDecorator;
-            On.Terraria.GameContent.Drawing.TileDrawing.PostDrawTiles -= DrawHook_TileEntities;
             On.Terraria.Lighting.GetColor_int_int -= LightColorDecorator;
+            On.Terraria.Main.DrawCachedProjs -= DrawHook_DrawCachedProjs;
             base.Unload();
         }
 
-        private void DrawHook_TileEntities(On.Terraria.GameContent.Drawing.TileDrawing.orig_PostDrawTiles orig, TileDrawing self, bool solidLayer, bool forRenderTargets, bool intoRenderTargets)
-        {
-            orig(self, solidLayer, forRenderTargets, intoRenderTargets);
-            if (solidLayer == true && forRenderTargets)
-            {
-                DrawChunks();
-            }
-        }
         public Color LightColorDecorator(On.Terraria.Lighting.orig_GetColor_int_int orig, int i, int j)
         {
+            if (chunkFullLight)
+                return Color.White;
             // Hack lighting engine to ensure dark tiles to be drawn
             if (chunkProcessing)
             {
@@ -125,13 +130,13 @@ namespace PixelSandbox
             return Path.Combine(Path.Combine(Main.WorldPath, "sandbox_{0}".FormatWith(Main.worldName)), "chunk_tmp_{0}_{1}".FormatWith(chunk.idx, chunk.idy));
         }
 
-        public void EnsureSingleChunk(int i, int j)
+        public async void EnsureSingleChunk(int i, int j, bool load = true)
         {
             if (chunks[i, j] == null)
                 chunks[i, j] = new(i, j);
             chunks[i, j].EnsureRenderTargets();
-            if (recentChunks.IndexOf(chunks[i, j]) == -1)
-                _ = chunks[i, j].LoadChunk(ChunkFilename(chunks[i, j]));
+            if (load && recentChunks.IndexOf(chunks[i, j]) == -1)
+                await chunks[i, j].LoadChunk(ChunkFilename(chunks[i, j]));
         }
 
         public void EnsureChunks()
@@ -150,8 +155,12 @@ namespace PixelSandbox
                 recentChunks.Add(chunk);
         }
 
-        public void UpdateChunks()
+        public async void UpdateChunks()
         {
+            if (!inited || !ThreadCheck.IsMainThread || !Main.IsGraphicsDeviceAvailable)
+                return;
+            var origTargets = Main.graphics.GraphicsDevice.GetRenderTargets();
+
             timeTag++;
             frameSeed = Main.rand.NextFloat();
             EnsureChunks();
@@ -165,29 +174,44 @@ namespace PixelSandbox
                 a.recentTimeTag > b.recentTimeTag ? -1 : 1);
             while (recentChunks.Count > PREFERED_CHUNKS)
             {
-                _ = recentChunks[^1].SaveChunk(ChunkFilename(recentChunks[^1]));
+                await recentChunks[^1].SaveChunk(ChunkFilename(recentChunks[^1]));
                 chunks[recentChunks[^1].idx, recentChunks[^1].idy] = null;
                 recentChunks.RemoveAt(recentChunks.Count - 1);
             }
-            int count = recentChunks.Count;
-            for (int i = 0; i < count; i++)
-                recentChunks[i].Update();
+            foreach (var chunk in recentChunks)
+                chunk.Update();
+
+            Main.graphics.GraphicsDevice.SetRenderTargets(origTargets);
         }
 
         public void DrawChunks()
         {
+            if (!inited || !ThreadCheck.IsMainThread || !Main.IsGraphicsDeviceAvailable)
+                return;
+            var origTargets = Main.graphics.GraphicsDevice.GetRenderTargets();
+
             EnsureChunks();
             Vector2 topLeft = Main.Camera.ScaledPosition;
             Vector2 bottomRight = Main.Camera.ScaledSize + topLeft;
             for (int i = (int)(topLeft.X / PSChunk.CHUNK_WIDTH_INNER); i <= (int)(bottomRight.X / PSChunk.CHUNK_WIDTH_INNER); i++)
                 for (int j = (int)(topLeft.Y / PSChunk.CHUNK_HEIGHT_INNER); j <= (int)(bottomRight.Y / PSChunk.CHUNK_HEIGHT_INNER); j++)
                     chunks[i, j].Draw();
+
+            Main.graphics.GraphicsDevice.SetRenderTargets(origTargets);
         }
 
         public override void PostUpdateDusts()
         {
             UpdateChunks();
             base.PostUpdateDusts();
+        }
+
+        public override void PostUpdateEverything()
+        {
+            // 跳过进入世界的首次更新 否则会触发Device Reset
+            inited = true;
+            tileDrawing.Update();
+            base.PostUpdateEverything();
         }
 
         public void ScreenEffectDecorator(On.Terraria.Graphics.Effects.FilterManager.orig_EndCapture orig,

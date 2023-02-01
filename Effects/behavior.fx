@@ -69,7 +69,9 @@ float4 computeFrag(ComputeFragmentIn input) : COLOR0
         return float4(0, 0, 0, 0);
     if (center.a > 0)
     {
-		if ((down.a > 0 || downm.a > 0) && (downr.a > 0 || downrm.a > 0))
+        // 下方被挡住
+        // 右下被挡住或者被右侧落沙占用
+		if ((down.a > 0 || downm.a > 0) && (downr.a > 0 || downrm.a > 0 || right.a > 0))
 			return center;
         return float4(0, 0, 0, 0);
     }

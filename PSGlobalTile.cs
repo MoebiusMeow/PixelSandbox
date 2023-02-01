@@ -4,11 +4,13 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.GameContent.Drawing;
 using Terraria.Graphics.Light;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace PixelSandbox
@@ -19,24 +21,50 @@ namespace PixelSandbox
         {
             int idx = (int)(i * 16 / PSChunk.CHUNK_WIDTH_INNER);
             int idy = (int)(j * 16 / PSChunk.CHUNK_HEIGHT_INNER);
-            PSSandboxSystem.Instance.EnsureSingleChunk(idx, idy);
             PSChunk chunk = PSSandboxSystem.Instance.chunks[idx, idy];
-            PSSandboxSystem.Instance.MarkRecent(chunk);
-            if (!fail)
+            if (!fail && chunk != null && !chunk.processing)
             {
-                var texture = Main.instance.TilesRenderer.GetTileDrawTexture(Main.tile[i, j], i, j);
-                Main.QueueMainThreadAction(() =>
+                bool solid;
+                if (TileID.Sets.DrawTileInSolidLayer[type].HasValue)
+                    solid = TileID.Sets.DrawTileInSolidLayer[type].Value;
+                else
+                    solid = Main.tileSolid[type];
+
+                if (ThreadCheck.IsMainThread)
                 {
-                    TileDrawInfo info = new TileDrawInfo();
-                    info.tileCache = Main.tile[i, j];
-                    info.typeCache = (ushort)type;
+                    PSSandboxSystem.Instance.EnsureSingleChunk(idx, idy, false);
+                    PSSandboxSystem.Instance.MarkRecent(chunk);
+
+                    Vector2 startPosition = new Vector2(i, j) * 16 - chunk.TopLeft + Vector2.One * PSChunk.CHUNK_PADDING;
+                    PSSandboxSystem.chunkFullLight = true;
+                    Main.graphics.GraphicsDevice.SetRenderTarget(chunk.nonSolidMask);
+                    Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                    // Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, startPosition, new Rectangle(0, 0, 16, 16), Color.Transparent, 0, Vector2.Zero, 1.0f, SpriteEffects.None, 0);
+                    Main.spriteBatch.End();
+                    // chunk.DrawWorld(new Vector2(i, j) * 16, Vector2.One * 16, !solid);
+                    // chunk.DrawWorld(chunk.TopLeft - Vector2.One * PSChunk.CHUNK_PADDING, new Vector2(PSChunk.CHUNK_WIDTH, PSChunk.CHUNK_HEIGHT), solid, false);
+                    PSSandboxSystem.chunkFullLight = false;
+
                     Main.graphics.GraphicsDevice.SetRenderTarget(chunk.content);
-                    Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-                    Main.spriteBatch.Draw(texture, (new Vector2(i, j) * 16 - chunk.TopLeft - Vector2.One * 8) / PSChunk.SAND_SIZE,
-                        new Rectangle(0, 0, 16, 16), Color.White, 0, Vector2.Zero, 1.0f,
+                    BlendState blendState = new BlendState();
+                    blendState.AlphaBlendFunction = BlendFunction.Max;
+                    blendState.ColorBlendFunction = BlendFunction.Add;
+                    blendState.AlphaSourceBlend = Blend.One;
+                    blendState.AlphaDestinationBlend = Blend.One;
+                    blendState.ColorSourceBlend = Blend.One;
+                    blendState.ColorDestinationBlend = Blend.InverseSourceAlpha;
+
+                    Main.spriteBatch.Begin(SpriteSortMode.Immediate, blendState);
+                    Main.spriteBatch.Draw(chunk.nonSolidMask, startPosition / PSChunk.SAND_SIZE,
+                        new Rectangle((int)startPosition.X + 4, (int)startPosition.Y + 4, 8, 8), Color.White, (Main.rand.NextFloat() + 0.5f) * 0.1f, Vector2.Zero, 0.9f,
                         SpriteEffects.None, 0);
                     Main.spriteBatch.End();
-                });
+
+                    Main.graphics.GraphicsDevice.SetRenderTarget(chunk.mask);
+                    Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                    Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, startPosition, new Rectangle(0, 0, 16, 16), Color.Transparent, 0, Vector2.Zero, 1.0f, SpriteEffects.None, 0);
+                    Main.spriteBatch.End();
+                }
             }
             base.KillTile(i, j, type, ref fail, ref effectOnly, ref noItem);
         }
