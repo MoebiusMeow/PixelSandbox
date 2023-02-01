@@ -56,7 +56,7 @@ namespace PixelSandbox
 
                     Main.spriteBatch.Begin(SpriteSortMode.Immediate, blendState);
                     Main.spriteBatch.Draw(chunk.nonSolidMask, startPosition / PSChunk.SAND_SIZE,
-                        new Rectangle((int)startPosition.X + 4, (int)startPosition.Y + 4, 8, 8), Color.White, (Main.rand.NextFloat() + 0.5f) * 0.1f, Vector2.Zero, 0.9f,
+                        new Rectangle((int)startPosition.X + 4, (int)startPosition.Y + 4, 8, 8), Color.White, (Main.rand.NextFloat() + 0.5f) * MathF.PI, Vector2.One * 8, 0.7f,
                         SpriteEffects.None, 0);
                     Main.spriteBatch.End();
 

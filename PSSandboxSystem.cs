@@ -47,7 +47,19 @@ namespace PixelSandbox
             return Instance.chunks[idx, idy];
         }
 
+        public override void PreWorldGen()
+        {
+            ResetChunks();
+            base.PreWorldGen();
+        }
+
         public override void OnWorldLoad()
+        {
+            ResetChunks();
+            base.OnWorldLoad();
+        }
+
+        public void ResetChunks()
         {
             inited = false;
             chunks = new PSChunk[(int)MathF.Ceiling(Main.maxTilesX * 16 / (float)PSChunk.CHUNK_WIDTH_INNER), 
@@ -56,7 +68,6 @@ namespace PixelSandbox
             string chunkFileDir = Path.Combine(Main.WorldPath, "sandbox_{0}".FormatWith(Main.worldName));
             if (!Directory.Exists(chunkFileDir))
                 Directory.CreateDirectory(chunkFileDir);
-            base.OnWorldLoad();
         }
 
         public override async void OnWorldUnload()
@@ -75,7 +86,7 @@ namespace PixelSandbox
         {
             behaviorShader = Mod.Assets.Request<Effect>(behaviorShaderPath, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
             On.Terraria.Graphics.Effects.FilterManager.EndCapture += ScreenEffectDecorator;
-            On.Terraria.Main.DrawCachedProjs += DrawHook_DrawCachedProjs;
+            On.Terraria.Main.DrawCachedNPCs += DrawHook_DrawCachedNPCs;
             On.Terraria.Lighting.GetColor_int_int += LightColorDecorator;
 
             tilePaintSystem = Main.instance.TilePaintSystem;
@@ -86,24 +97,22 @@ namespace PixelSandbox
             base.Load();
         }
 
-        private void DrawHook_DrawCachedProjs(On.Terraria.Main.orig_DrawCachedProjs orig, Main self, List<int> projCache, bool startSpriteBatch)
+        private void DrawHook_DrawCachedNPCs(On.Terraria.Main.orig_DrawCachedNPCs orig, Main self, List<int> npcCache, bool behindTiles)
         {
-            if (projCache == Main.instance.DrawCacheProjsBehindNPCs)
+            if (npcCache == Main.instance.DrawCacheNPCsBehindNonSolidTiles)
             {
-                if (!startSpriteBatch)
-                    Main.spriteBatch.End();
+                Main.spriteBatch.End();
                 DrawChunks();
-                if (!startSpriteBatch)
-                    Main.spriteBatch.Begin();
+                Main.spriteBatch.Begin();
             }
-            orig(self, projCache, startSpriteBatch);
+            orig(self, npcCache, behindTiles);
         }
 
         public override void Unload()
         {
             On.Terraria.Graphics.Effects.FilterManager.EndCapture -= ScreenEffectDecorator;
             On.Terraria.Lighting.GetColor_int_int -= LightColorDecorator;
-            On.Terraria.Main.DrawCachedProjs -= DrawHook_DrawCachedProjs;
+            On.Terraria.Main.DrawCachedNPCs -= DrawHook_DrawCachedNPCs;
             base.Unload();
         }
 
