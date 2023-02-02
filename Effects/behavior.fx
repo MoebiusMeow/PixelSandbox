@@ -2,6 +2,11 @@
 
 float2 uStep;
 
+float2 uCircleCenter;
+float uCircleRadius;
+float uCircleRotation;
+float uCircleCentrifuge;
+
 texture2D uTex0;
 sampler2D uImage0 = sampler_state
 {
@@ -71,6 +76,7 @@ float4 computeFrag(ComputeFragmentIn input) : COLOR0
     {
         // 下方被挡住
         // 右下被挡住或者被右侧落沙占用
+        // 才能保证这个粒子不流走
 		if ((down.a > 0 || downm.a > 0) && (downr.a > 0 || downrm.a > 0 || right.a > 0))
 			return center;
         return float4(0, 0, 0, 0);
@@ -98,6 +104,21 @@ float4 displayFrag(ComputeFragmentIn input) : COLOR0
     return float4(0, 0, 0, 0);
 }
 
+float4 blackHoleFrag(ComputeFragmentIn input) : COLOR0
+{
+    float2 uv = input.coords;
+    float2 d = uv - uCircleCenter;
+    float L = length(d);
+    if (L >= uCircleRadius)
+		return tex2D(uImage1, uv);
+    if (L <= uCircleCentrifuge * uCircleRadius)
+        return float4(0, 0, 0, 0);
+    float rot = (exp(1 - L / uCircleRadius) - 1) * uCircleRotation;
+    float2 rotatedD = float2(cos(rot), sin(rot)) * d.x + float2(-sin(rot), cos(rot)) * d.y;
+    uv = uCircleCenter + rotatedD / L * lerp(0, uCircleRadius, (L / uCircleRadius - uCircleCentrifuge) / (1 - uCircleCentrifuge));
+    return tex2D(uImage1, uv);
+}
+
 technique Technique233
 {
     pass Compute
@@ -108,6 +129,11 @@ technique Technique233
     pass Display
     {
         PixelShader  = compile ps_3_0 displayFrag(); 
+    }
+
+    pass BlackHole
+    {
+        PixelShader  = compile ps_3_0 blackHoleFrag(); 
     }
 }
 

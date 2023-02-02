@@ -21,7 +21,7 @@ namespace PixelSandbox
         {
             int idx = (int)(i * 16 / PSChunk.CHUNK_WIDTH_INNER);
             int idy = (int)(j * 16 / PSChunk.CHUNK_HEIGHT_INNER);
-            PSChunk chunk = PSSandboxSystem.Instance.chunks[idx, idy];
+            PSChunk chunk = PSSandboxSystem.TryGetChunk(idx, idy);
             if (!fail && chunk != null && !chunk.processing)
             {
                 bool solid;
@@ -32,15 +32,16 @@ namespace PixelSandbox
 
                 if (ThreadCheck.IsMainThread)
                 {
+                    var origTargets = Main.graphics.GraphicsDevice.GetRenderTargets();
                     PSSandboxSystem.Instance.EnsureSingleChunk(idx, idy, false);
                     PSSandboxSystem.Instance.MarkRecent(chunk);
 
                     Vector2 startPosition = new Vector2(i, j) * 16 - chunk.TopLeft + Vector2.One * PSChunk.CHUNK_PADDING;
                     PSSandboxSystem.chunkFullLight = true;
-                    Main.graphics.GraphicsDevice.SetRenderTarget(chunk.nonSolidMask);
-                    Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                    // Main.graphics.GraphicsDevice.SetRenderTarget(chunk.nonSolidMask);
+                    // Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                     // Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, startPosition, new Rectangle(0, 0, 16, 16), Color.Transparent, 0, Vector2.Zero, 1.0f, SpriteEffects.None, 0);
-                    Main.spriteBatch.End();
+                    // Main.spriteBatch.End();
                     // chunk.DrawWorld(new Vector2(i, j) * 16, Vector2.One * 16, !solid);
                     // chunk.DrawWorld(chunk.TopLeft - Vector2.One * PSChunk.CHUNK_PADDING, new Vector2(PSChunk.CHUNK_WIDTH, PSChunk.CHUNK_HEIGHT), solid, false);
                     PSSandboxSystem.chunkFullLight = false;
@@ -64,6 +65,7 @@ namespace PixelSandbox
                     Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                     Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, startPosition, new Rectangle(0, 0, 16, 16), Color.Transparent, 0, Vector2.Zero, 1.0f, SpriteEffects.None, 0);
                     Main.spriteBatch.End();
+                    Main.graphics.GraphicsDevice.SetRenderTargets(origTargets);
                 }
             }
             base.KillTile(i, j, type, ref fail, ref effectOnly, ref noItem);
