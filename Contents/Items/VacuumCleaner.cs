@@ -30,6 +30,8 @@ namespace PixelSandbox.Contents.Items
         public override void SetDefaults()
         {
             Item.useTime = 10;
+            Item.height = 22;
+            Item.width = 32;
             Item.useAnimation = 30;
             Item.holdStyle = ItemHoldStyleID.HoldFront;
             Item.useStyle = ItemUseStyleID.MowTheLawn;

@@ -71,7 +71,7 @@ namespace PixelSandbox
         public RenderTarget2D light = null;
 
         private int maskUpdateCounter = 0;
-        private int lightUpdateCounter = 0;
+        static private int lightUpdateCounter = 0;
         public int recentTimeTag = 0;
         public volatile bool loadingOrLoaded = false;
         public volatile bool saving = false;
@@ -82,6 +82,7 @@ namespace PixelSandbox
         public Vector2 Position => new Vector2(idx * CHUNK_WIDTH_INNER, idy * CHUNK_HEIGHT_INNER);
         public Vector2 TopLeft => Position;
         public Vector2 BottomRight => new Vector2((idx + 1) * CHUNK_WIDTH_INNER, (idy + 1) * CHUNK_HEIGHT_INNER);
+        public Vector2 WorldToUV(Vector2 worldPosition) => (worldPosition - TopLeft + Vector2.One * CHUNK_PADDING) / new Vector2(CHUNK_WIDTH, CHUNK_HEIGHT);
 
         public PSChunk(int idx, int idy)
         {
@@ -276,6 +277,12 @@ namespace PixelSandbox
             Main.spriteBatch.End();
         }
 
+        public static void StepLightState()
+        {
+            if (lightUpdateCounter-- <= 0)
+                lightUpdateCounter = LIGHT_UPDATE_INTERVAL;
+        }
+
         public void Update()
         {
             if (mask.IsContentLost || --maskUpdateCounter <= 0)
@@ -283,15 +290,13 @@ namespace PixelSandbox
                 UpdateMask();
                 maskUpdateCounter = MASK_UPDATE_INTERVAL;
             }
-            if (light.IsContentLost || --lightUpdateCounter <= 0)
+            if (light.IsContentLost || lightUpdateCounter <= 0)
             {
                 SampleLight();
-                lightUpdateCounter = LIGHT_UPDATE_INTERVAL;
             }
 
             GraphicsDevice device = Main.graphics.GraphicsDevice;
             device.SetRenderTarget(content);
-            device.Clear(Color.Transparent);
             Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
             Effect behaviorShader = PSSandboxSystem.behaviorShader;
             behaviorShader.Parameters["uTex1"].SetValue(swap);
@@ -302,7 +307,20 @@ namespace PixelSandbox
             Main.spriteBatch.Draw(swap, Vector2.Zero, Color.White);
             Main.spriteBatch.End();
 
-            if (Main.LocalPlayer != null && Main.LocalPlayer.controlThrow)
+            if (Main.rand.NextBool(2))
+            {
+                Utils.Swap(ref content, ref swap);
+                device.SetRenderTarget(content);
+                Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
+                behaviorShader.Parameters["uTex1"].SetValue(swap);
+                behaviorShader.Parameters["uTex2"].SetValue(mask);
+                behaviorShader.Parameters["uHashSeed"].SetValue(Vector2.One * 2.1f * (float)Main.timeForVisualEffects);
+                behaviorShader.CurrentTechnique.Passes["ExtraFall"].Apply();
+                Main.spriteBatch.Draw(swap, Vector2.Zero, Color.White);
+                Main.spriteBatch.End();
+            }
+
+            if (PixelSandbox.DEBUG_MODE && Main.LocalPlayer != null && Main.LocalPlayer.controlThrow)
             {
                 Vector2 mousePos = new Vector2(Main.mouseX, Main.mouseY) + Main.Camera.UnscaledPosition;
                 Point pos = ((mousePos - TopLeft) / SAND_SIZE).ToPoint();
@@ -329,6 +347,13 @@ namespace PixelSandbox
             Effect behaviorShader = PSSandboxSystem.behaviorShader;
             behaviorShader.Parameters["uTex1"].SetValue(content);
             behaviorShader.Parameters["uTex3"].SetValue(light);
+            if (Main.LocalPlayer != null)
+            {
+                behaviorShader.Parameters["uCircleCenter"].SetValue(WorldToUV(Main.LocalPlayer.Center));
+                behaviorShader.Parameters["uPlayerLightColor"].SetValue(Color.White.ToVector3());
+            }
+            behaviorShader.Parameters["uStep"].SetValue(new Vector2(1 / (float)CHUNK_WIDTH_SAND, 1 / (float)CHUNK_HEIGHT_SAND));
+
             behaviorShader.CurrentTechnique.Passes["Display"].Apply();
             // Main.spriteBatch.Draw(mask, Position - Main.screenPosition - Vector2.One * CHUNK_PADDING, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
             Rectangle frame = content.Frame();

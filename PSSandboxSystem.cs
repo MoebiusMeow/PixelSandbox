@@ -17,7 +17,7 @@ namespace PixelSandbox
 {
     public class PSSandboxSystem : ModSystem
     {
-        public static int PREFERED_CHUNKS = 20;
+        public static int PREFERED_CHUNKS = 17;
         public static int CHUNK_MIN_UNLOAD_DELAY = 60;
 
         public bool inited = false;
@@ -190,13 +190,17 @@ namespace PixelSandbox
             Vector2 topLeft = Main.Camera.ScaledPosition;
             Vector2 bottomRight = Main.Camera.ScaledSize + topLeft;
             EnsureChunks(topLeft, bottomRight);
+            int leastChunks = 0;
             for (int i = (int)(topLeft.X / PSChunk.CHUNK_WIDTH_INNER); i <= (int)(bottomRight.X / PSChunk.CHUNK_WIDTH_INNER); i++)
                 for (int j = (int)(topLeft.Y / PSChunk.CHUNK_HEIGHT_INNER); j <= (int)(bottomRight.Y / PSChunk.CHUNK_HEIGHT_INNER); j++)
+                {
                     MarkRecent(chunks[i, j]);
+                    leastChunks += 1;
+                }
             recentChunks.Sort((PSChunk a, PSChunk b) =>
                 a.recentTimeTag == b.recentTimeTag ? 0 : 
                 a.recentTimeTag > b.recentTimeTag ? -1 : 1);
-            if (recentChunks.Count > PREFERED_CHUNKS)
+            if (recentChunks.Count > PREFERED_CHUNKS && recentChunks.Count > leastChunks)
             {
                 if (recentChunks[^1].recentTimeTag + CHUNK_MIN_UNLOAD_DELAY < timeTag)
                 {
@@ -205,6 +209,7 @@ namespace PixelSandbox
                     recentChunks.RemoveAt(recentChunks.Count - 1);
                 }
             }
+            PSChunk.StepLightState();
             foreach (var chunk in recentChunks)
                 chunk.UpdateCrossChunk();
             foreach (var chunk in recentChunks)
@@ -331,7 +336,7 @@ namespace PixelSandbox
                     continue;
                 if (player.itemAnimation <= 0)
                     continue;
-                Vector2 targetPos = player.Bottom + Vector2.UnitX * player.Directions * 30;
+                Vector2 targetPos = player.Bottom + new Vector2(player.Directions.X * 40, - 15);
                 targetPos -= Vector2.One * 30;
 
                 float sandCount = 0;

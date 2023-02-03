@@ -123,7 +123,7 @@ namespace PixelSandbox.Contents
 
             Vector2 velocityAfterSand = velocityAfterTile;
             Vector2 target = Player.position + velocityAfterTile;
-            if ((Player.velocity.Y >= 0 || (Player.controlUp && !Player.controlJump)) && localStandOnSand)
+            if ((velocityAfterTile.Y > 0 || (Player.controlUp && !Player.controlJump)) && localStandOnSand)
             {
                 if (!fallThrough)
                 {
@@ -157,7 +157,7 @@ namespace PixelSandbox.Contents
                 else
                     InflictFallDamage();
             }
-            if (MathF.Abs(velocityAfterTile.X) < MathF.Abs(velocityAfterSand.X))
+            if (MathF.Abs(velocityAfterTile.X) < MathF.Abs(velocityAfterSand.X) - float.Epsilon)
             {
                 velocityAfterSand = velocityAfterTile;
                 localDelayedVelocity = velocityAfterSand;
