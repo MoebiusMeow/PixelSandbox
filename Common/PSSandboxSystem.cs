@@ -338,7 +338,7 @@ namespace PixelSandbox
                 return;
             var origTargets = Main.graphics.GraphicsDevice.GetRenderTargets();
 
-            foreach (var player in Main.player)
+            foreach (var player in Main.player) if (player.active)
             {
                 if (!(player.active && (player.HeldItem?.ModItem?.GetType().IsAssignableTo(typeof(PSModItem)) ?? false)))
                     continue;
@@ -348,7 +348,8 @@ namespace PixelSandbox
                 var nl = null as PSModItem;
                 item?.Behavior.PlayerUseAnimation?.Invoke(item, player);
             }
-            foreach (var p in Main.projectile)
+
+            foreach (var p in Main.projectile) if (p.active)
             {
                 PSModProjectile projectile = p.ModProjectile as PSModProjectile;
                 projectile?.Behavior.Update?.Invoke(projectile);
