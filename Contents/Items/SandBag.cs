@@ -284,26 +284,27 @@ namespace PixelSandbox.Contents.Items
             {
                 Vector2 center = Vector2.One * 0.5f;
 
-                // 这里改为CPU暴力计算吸尘器
                 var effectRT = PSSandboxSystem.Instance.effectRT;
                 var effectRTSwap = PSSandboxSystem.Instance.effectRTSwap;
-                if (data == null || data.Length != effectRT.Width * effectRT.Height)
-                    data = new Vector4[effectRT.Width * effectRT.Height];
+                var effectSize = PSSandboxSystem.Instance.effectSize;
 
-                effectRTSwap.GetData(data);
-                for (int j = 0; j < effectRT.Height; j++)
-                    for (int i = 0; i < effectRT.Width; i++)
+                if (data == null || data.Length != effectSize.X * effectSize.Y)
+                    data = new Vector4[effectSize.X * effectSize.Y];
+
+                effectRTSwap.GetData(0, new Rectangle(0, 0, effectSize.X, effectSize.Y), data, 0, data.Length);
+                for (int j = 0; j < effectSize.Y; j++)
+                    for (int i = 0; i < effectSize.X; i++)
                     {
-                        Vector2 uv = new Vector2(i / (float)effectRT.Width, j / (float)effectRT.Height);
-                        Vector4 value = data[i + j * effectRT.Width];
+                        Vector2 uv = new Vector2(i / (float)effectSize.X, j / (float)effectSize.Y);
+                        Vector4 value = data[i + j * effectSize.X];
                         if (value.W == 0)
                         {
-                            data[i + j * effectRT.Width] = new Vector4(
-                                Color.Lerp(new Color(212, 192, 100), Color.SandyBrown, Main.rand.NextFloat())
-                                .ToVector3() * 0.25f * (3 + Main.rand.NextFloat()), 1);
+                            data[i + j * effectSize.X] = new Vector4(
+                                Color.Lerp(new Color(212, 192, 100), Color.Orange, 0)
+                                .ToVector3() * MathHelper.Lerp(0.9f, 1.0f, Main.rand.NextFloat()), 1);
                         }
                     }
-                effectRT.SetData(data);
+                effectRT.SetData(0, new Rectangle(0, 0, effectSize.X, effectSize.Y), data, 0, data.Length);
             };
             var sandProjectile = sandboxObject as SandBagProjectile;
             float radius = 4;

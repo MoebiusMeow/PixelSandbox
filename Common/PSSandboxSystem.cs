@@ -36,6 +36,8 @@ namespace PixelSandbox
 
         public RenderTarget2D effectRT = null;
         public RenderTarget2D effectRTSwap = null;
+        public Point effectSize;
+        public Dictionary<Point, (RenderTarget2D, RenderTarget2D)> effectRTDict;
 
 
         public static PSSandboxSystem Instance => _instance;
@@ -103,6 +105,8 @@ namespace PixelSandbox
             lightingEngine = new LegacyLighting(Main.Camera);
             lightingEngine.Rebuild();
 
+            effectRTDict = new();
+
             base.Load();
         }
 
@@ -127,6 +131,15 @@ namespace PixelSandbox
             On.Terraria.Graphics.Effects.FilterManager.EndCapture -= ScreenEffectDecorator;
             On.Terraria.Lighting.GetColor_int_int -= LightColorDecorator;
             On.Terraria.Main.DrawCachedNPCs -= DrawHook_DrawCachedNPCs;
+            On.Terraria.Collision.StepDown -= Collision_StepDown;
+
+            foreach (var v in effectRTDict.Values)
+            {
+                if (v.Item1 != null && !v.Item1.IsDisposed)
+                    v.Item1.Dispose();
+                if (v.Item2 != null && !v.Item2.IsDisposed)
+                    v.Item2.Dispose();
+            }
             base.Unload();
         }
 
@@ -257,8 +270,18 @@ namespace PixelSandbox
             Vector2 size = (bottomRight - topLeft) / PSChunk.SAND_SIZE;
             if (size.X <= 1 || size.Y <= 1)
                 return;
-            EnsureRT(ref effectRT, size.ToPoint());
-            EnsureRT(ref effectRTSwap, size.ToPoint());
+            effectSize = size.ToPoint();
+            if (!effectRTDict.ContainsKey(effectSize))
+            {
+                RenderTarget2D tempRT = null;
+                RenderTarget2D swapRT = null;
+                EnsureRT(ref tempRT, size.ToPoint());
+                EnsureRT(ref swapRT, size.ToPoint());
+                effectRTDict.Add(effectSize, (tempRT, swapRT));
+            }
+            var renderTargets = effectRTDict[effectSize];
+            effectRT = renderTargets.Item1;
+            effectRTSwap = renderTargets.Item2;
 
             var origTargets = Main.graphics.GraphicsDevice.GetRenderTargets();
             var device = Main.graphics.GraphicsDevice;
@@ -275,11 +298,18 @@ namespace PixelSandbox
             }
 
             device.SetRenderTarget(effectRTSwap);
-            device.Clear(Color.Transparent);
+            // device.Clear(Color.Transparent);
             foreach (var chunk in recentChunks) if (PSChunk.IsChunkReady(chunk))
             {
+                // var relativeTL = (topLeft - chunk.TopLeft + Vector2.One * PSChunk.CHUNK_PADDING).ToPoint();
+                // var relativeBR = (bottomRight - chunk.TopLeft + Vector2.One * PSChunk.CHUNK_PADDING).ToPoint();
+                // var frame = new Rectangle(relativeTL.X, relativeTL.Y, relativeBR.X - relativeTL.X, relativeBR.Y - relativeTL.Y);
+                var frame = PSChunk.SandArea;
+                frame.Width = Math.Min(frame.Width, (int)(bottomRight.X - chunk.TopLeft.X + PSChunk.CHUNK_PADDING) / PSChunk.SAND_SIZE);
+                frame.Height = Math.Min(frame.Height, (int)(bottomRight.Y - chunk.TopLeft.Y + PSChunk.CHUNK_PADDING) / PSChunk.SAND_SIZE);
                 Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
-                Main.spriteBatch.Draw(chunk.content, (chunk.TopLeft - topLeft) / PSChunk.SAND_SIZE, PSChunk.SandArea, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
+                Main.spriteBatch.Draw(chunk.content, (chunk.TopLeft - topLeft) / PSChunk.SAND_SIZE, 
+                    frame, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
                 Main.spriteBatch.End();
             }
 
@@ -359,13 +389,16 @@ namespace PixelSandbox
 
         public static void EnsureRT(ref RenderTarget2D content, Point size)
         {
-            if (content == null || content.Width != size.X || content.Height != size.Y || content.IsContentLost)
+            if (content == null || content.Width < size.X || content.Height < size.Y)
             {
                 if (content != null && !content.IsDisposed)
                     content.Dispose();
                 content = new RenderTarget2D(Main.graphics.GraphicsDevice,
-                    size.X, size.Y,
+                    Math.Max(size.X, content == null ? 1 : content.Width), 
+                    Math.Max(size.Y, content == null ? 1 : content.Height),
                     false, PSChunk.CONTENT_FORMAT, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
+                if (PixelSandbox.DebugMode)
+                    PixelSandbox.Instance.Logger.Debug("Creating RenderTarget {0}x{1}".FormatWith(content.Width, content.Height));
             }
         }
 

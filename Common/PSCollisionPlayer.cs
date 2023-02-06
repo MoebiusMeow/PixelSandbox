@@ -88,7 +88,7 @@ namespace PixelSandbox
                         Player.velocity.X = 0;
                         Player.legFrameCounter = 0;
                     }
-                    for (int i = 3; i < 8 + Player.extraAccessorySlots; i++)
+                    for (int i = 3; i < Player.hideVisibleAccessory.Length; i++)
                         if (Player.armor[i].wingSlot == Player.wingsLogic && Player.hideVisibleAccessory[i])
                             Player.wings = 0;
                     if (Player.wings > 0)
@@ -166,7 +166,7 @@ namespace PixelSandbox
             else
                 localDelayedVelocity = velocityAfterSand;
 
-            if (localCollided != -1)
+            if (localCollided != -1 && !Player.justJumped)
             {
                 Vector2 N = -Vector2.UnitY;
                 if (N.Y * Player.gravDir < 0)

@@ -51,14 +51,16 @@ namespace PixelSandbox.Contents.Items.Cleaners
                 // 这里改为CPU暴力计算吸尘器
                 var effectRT = PSSandboxSystem.Instance.effectRT;
                 var effectRTSwap = PSSandboxSystem.Instance.effectRTSwap;
-                if (data == null || data.Length != effectRT.Width * effectRT.Height)
-                    data = new Vector4[effectRT.Width * effectRT.Height];
-                if (newData == null || newData.Length != effectRT.Width * effectRT.Height)
-                    newData = new Vector4[effectRT.Width * effectRT.Height];
-                if (dupCount == null || dupCount.Length != effectRT.Width * effectRT.Height)
-                    dupCount = new int[effectRT.Width * effectRT.Height];
-                if (dupLast == null || dupLast.Length != effectRT.Width * effectRT.Height)
-                    dupLast = new int[effectRT.Width * effectRT.Height];
+                var effectSize = PSSandboxSystem.Instance.effectSize;
+
+                if (data == null || data.Length != effectSize.X * effectSize.Y)
+                    data = new Vector4[effectSize.X * effectSize.Y];
+                if (newData == null || newData.Length != effectSize.X * effectSize.Y)
+                    newData = new Vector4[effectSize.X * effectSize.Y];
+                if (dupCount == null || dupCount.Length != effectSize.X * effectSize.Y)
+                    dupCount = new int[effectSize.X * effectSize.Y];
+                if (dupLast == null || dupLast.Length != effectSize.X * effectSize.Y)
+                    dupLast = new int[effectSize.X * effectSize.Y];
                 for (int i = 0; i < newData.Length; i++)
                 {
                     dupCount[i] = 0;
@@ -66,12 +68,12 @@ namespace PixelSandbox.Contents.Items.Cleaners
                     newData[i] = Vector4.Zero;
                 }
 
-                effectRTSwap.GetData(data);
-                for (int j = 0; j < effectRT.Height; j++)
-                    for (int i = 0; i < effectRT.Width; i++)
+                effectRTSwap.GetData(0, new Rectangle(0, 0, effectSize.X, effectSize.Y), data, 0, data.Length);
+                for (int j = 0; j < effectSize.Y; j++)
+                    for (int i = 0; i < effectSize.X; i++)
                     {
-                        Vector2 uv = new Vector2(i / (float)effectRT.Width, j / (float)effectRT.Height);
-                        Vector4 value = data[i + j * effectRT.Width];
+                        Vector2 uv = new Vector2(i / (float)effectSize.X, j / (float)effectSize.Y);
+                        Vector4 value = data[i + j * effectSize.X];
                         if (value.W > 0)
                         {
                             float dist = (uv - center).Length();
@@ -84,8 +86,8 @@ namespace PixelSandbox.Contents.Items.Cleaners
                             }
                             if ((targetUV - center).Length() <= radius * Centrifuge)
                                 targetUV = -Vector2.One;
-                            Point t = new Point((int)MathF.Round(targetUV.X * effectRT.Width), (int)MathF.Round(targetUV.Y * effectRT.Height));
-                            int targetIndex = t.X + t.Y * effectRT.Width;
+                            Point t = new Point((int)MathF.Round(targetUV.X * effectSize.X), (int)MathF.Round(targetUV.Y * effectSize.Y));
+                            int targetIndex = t.X + t.Y * effectSize.X;
                             if (!effectRT.Frame().Contains(t))
                                 sandIncrease += 1;
                             else if (data[targetIndex].W == 0)
@@ -96,20 +98,20 @@ namespace PixelSandbox.Contents.Items.Cleaners
                                 dupCount[targetIndex] += 1;
                                 if (Main.rand.NextBool(dupCount[targetIndex]))
                                 {
-                                    newData[targetIndex] = data[i + j * effectRT.Width];
+                                    newData[targetIndex] = data[i + j * effectSize.X];
                                     if (dupLast[targetIndex] != -1)
                                         newData[dupLast[targetIndex]] = data[dupLast[targetIndex]];
-                                    dupLast[targetIndex] = i + j * effectRT.Width;
+                                    dupLast[targetIndex] = i + j * effectSize.X;
                                 }
                             }
                             else
                             {
                                 // 移动失败，留在原位
-                                newData[i + j * effectRT.Width] = data[i + j * effectRT.Width];
+                                newData[i + j * effectSize.X] = data[i + j * effectSize.X];
                             }
                         }
                     }
-                effectRT.SetData(newData);
+                effectRT.SetData(0, new Rectangle(0, 0, effectSize.X, effectSize.Y), newData, 0, newData.Length);
 
                 // 你也可以使用GPU上一个绘制来计算扭曲
                 // 但是这样的粒子模拟有损（会让粒子变多/变少）
@@ -127,7 +129,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
                     blendState.ColorDestinationBlend = Blend.InverseSourceAlpha;
 
                     Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
-                    // Main.spriteBatch.Draw(Mod.Assets.Request<Texture2D>("Contents/Projectiles/LightningRitual", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value, Vector2.Zero, null, Color.White, 0, Vector2.Zero, effectRT.Width / 408f, SpriteEffects.None, 0);
+                    // Main.spriteBatch.Draw(Mod.Assets.Request<Texture2D>("Contents/Projectiles/LightningRitual", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value, Vector2.Zero, null, Color.White, 0, Vector2.Zero, effectSize.X / 408f, SpriteEffects.None, 0);
                     Main.spriteBatch.End();
                     Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
                     behaviorShader.Parameters["uTex1"].SetValue(effectRTSwap);

@@ -34,6 +34,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
 
                 var effectRT = PSSandboxSystem.Instance.effectRT;
                 var effectRTSwap = PSSandboxSystem.Instance.effectRTSwap;
+                var effectSize = PSSandboxSystem.Instance.effectSize;
                 var behaviorShader = PSSandboxSystem.behaviorShader;
                 device.SetRenderTarget(effectRT);
                 device.Clear(Color.Transparent);
@@ -56,7 +57,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
                 behaviorShader.Parameters["uCircleRotation"].SetValue(1.001f * 1.2f * Main.LocalPlayer.direction);
                 behaviorShader.CurrentTechnique.Passes["BlackHole"].Apply();
                 // behaviorShader.CurrentTechnique.Passes["WhiteHole"].Apply();
-                Main.spriteBatch.Draw(effectRTSwap, Vector2.Zero, Color.White);
+                Main.spriteBatch.Draw(effectRTSwap, Vector2.Zero, new Rectangle(0, 0, effectSize.X, effectSize.Y), Color.White);
                 Main.spriteBatch.End();
             };
             Vector2 targetPos = player.Bottom + new Vector2(player.Directions.X * 24, -15);

@@ -19,7 +19,7 @@ Mods: {
 		ItemTooltip: {
 			SandBag:
 				'''
-				A bag of collected sand (Can be poured out)
+				A bag of collected sand (can be poured out)
 				[c/00FF00:Can be used at Extractinator]
 				‘Hmm... What's inside?’
 				'''
