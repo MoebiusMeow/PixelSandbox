@@ -1,4 +1,6 @@
 using Microsoft.Xna.Framework;
+using PixelSandbox.Contents.Items.Materials;
+using PixelSandbox.Contents.Items.Placeable;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.Creative;
@@ -41,17 +43,6 @@ namespace PixelSandbox.Contents.Items
             }
             else if (value <= 1)
             {
-                // ¸ß¶û·òÇò¸Ë»­×÷
-                switch (Main.rand.Next(2))
-                {
-                    case 0: resultType = 4661; break;
-                    case 1: resultType = 1491; break;
-                }
-                resultStack = 1;
-                return;
-            }
-            else if (value <= 4)
-            {
                 // ´óß÷Ê±×°£¨´óÎí£©
                 switch (Main.rand.Next(3))
                 {
@@ -62,15 +53,7 @@ namespace PixelSandbox.Contents.Items
                 resultStack = 1;
                 return;
             }
-            else if (value <= 10)
-            {
-                // Sand -> Sandwiches
-                // Reasonable!
-                resultType = ItemID.ShrimpPoBoy;
-                resultStack = 1;
-                return;
-            }
-            else if (value <= 20)
+            else if (value <= 3)
             {
                 switch (Main.rand.Next(2))
                 {
@@ -78,6 +61,28 @@ namespace PixelSandbox.Contents.Items
                     case 1: resultType = ItemID.PaperAirplaneB; break;
                 }
                 resultStack = Main.rand.Next(2, 6);
+                return;
+            }
+            else if (value <= 5)
+            {
+                // Ææ¹ÖµÄµñÏñ
+                resultType = ModContent.ItemType<StrangeStatue>();
+                resultStack = 1;
+                return;
+            }
+            else if (value <= 10)
+            {
+                // ÆÆ¾ÉÄ§·¨Êé
+                resultType = ModContent.ItemType<TatteredSpellTome>();
+                resultStack = 1;
+                return;
+            }
+            else if (value <= 20)
+            {
+                // Sand -> Sandwiches
+                // Reasonable!
+                resultType = ItemID.ShrimpPoBoy;
+                resultStack = 1;
                 return;
             }
             else if (value <= 40)

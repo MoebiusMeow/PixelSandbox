@@ -10,7 +10,10 @@ Mods: {
 	PixelSandbox: {
 		ItemName: {
 			SandBag: Sandbag
-			VacuumCleaner: Vacuum Cleaner
+			VacuumCleaner: The Prototype Cleaner Alpha
+			VacuumCleanerWood: Wooden Sand Cleaner
+			VacuumCleanerIron: Vacuum Cleaner
+			StrangeStatue: Strange Sandy Figure
 		}
 
 		ItemTooltip: {
@@ -18,21 +21,75 @@ Mods: {
 				'''
 				A bag of collected sand
 				[c/00FF00:Can be used in Extractinator]
-
 				‘Hmm... What's inside?’
 				'''
 
 			VacuumCleaner:
 				'''
-				An advanced dwarf-tech vacuum cleaner
-				Can be used to collect sand, producing {$Mods.PixelSandbox.ItemName.SandBag}
-				[c/00FF00:Right click in inventory to take out filled bags]
+				It is said to be the first prototype of all magical vacuum cleaners
+				You can feel the untamed power flowing inside the machine
+				Does [c/FFFF00:not] collect sand
+				‘Listen to me, the dune are moving...’
+				'''
 
+			VacuumCleanerWood:
+				'''
+				A basic tool to clean sand
+				Creates a small vacuum area by rapidly shaking a bucket
+				Can be used to collect sand, producing {$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
+				[c/00FF00:Right click in inventory to take out filled bags]
+				‘Seriously?’
+				'''
+
+			VacuumCleanerIron:
+				'''
+				An advanced dwarf-tech vacuum cleaner
+				Can be used to collect sand, producing {$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
+				[c/00FF00:Right click in inventory to take out filled bags]
 				‘A sand witch!’
+				'''
+
+			StrangeStatue:
+				'''
+				A sandy statue of an unknown figure
+				Can be use for some special recipes
+				Count as workbench and alchemy table
+				‘The Great Work’
 				'''
 		}
 
 		MapObject: {
+			StrangeStatueTile: "{$Mods.PixelSandbox.ItemName.StrangeStatue}"
+		}
+
+		Config: {
+			Configs: Configs
+			Performance: Performance
+			Debug: Debug
+			ChunkCount: {
+				Label: Preferred Chunk Count
+				Tooltip: Starts to unload least recently visited chunks when exceeded. (default 20)
+			}
+			UnloadDelay: {
+				Label: Preferred Unload Delay
+				Tooltip: Starts to unload a chunk after <X> seconds since last visit, regardless with chunk count. (default 3)
+			}
+			ScreenPadding: {
+				Label: Screen Padding
+				Tooltip: Load chunks within a distance of screen. A larger number would affect performance. (default 60)
+			}
+			LightingInterval: {
+				Label: Lighting Frequency
+				Tooltip: Decreasing lighting frequency can slightly improve performance, at the cost of lagging lighting effect.
+			}
+			EnableChunkDisplay: {
+				Label: Show Chunk Border
+				Tooltip: Display borders of each chunks
+			}
+			EnableDebugMessage: {
+				Label: Enable Debug Features
+				Tooltip: e.g. Use 'Throw' to create sand
+			}
 		}
 
 		Misc: {

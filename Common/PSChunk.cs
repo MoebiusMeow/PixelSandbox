@@ -1,11 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PixelSandbox.Configs;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Terraria;
@@ -38,7 +40,7 @@ namespace PixelSandbox
 
         // 更新遮罩和光照的间隔，以tick为单位
         public static int MASK_UPDATE_INTERVAL = 20;
-        public static int LIGHT_UPDATE_INTERVAL = 8;
+        public static int LIGHT_UPDATE_INTERVAL => (int)(400 / ModContent.GetInstance<SandboxConfig>().LightingInterval);
 
         public static readonly SurfaceFormat CONTENT_FORMAT = SurfaceFormat.Vector4;
 
@@ -72,17 +74,25 @@ namespace PixelSandbox
 
         private int maskUpdateCounter = 0;
         static private int lightUpdateCounter = 0;
+        // 最近被访问时间
         public int recentTimeTag = 0;
+        // 最久更新时间
+        public int updateTimeTag = 0;
         public volatile bool loadingOrLoaded = false;
+        public volatile bool loaded = false;
         public volatile bool saving = false;
         public volatile bool processing = false;
-
-        private Vector4[] buffer = null;
 
         public Vector2 Position => new Vector2(idx * CHUNK_WIDTH_INNER, idy * CHUNK_HEIGHT_INNER);
         public Vector2 TopLeft => Position;
         public Vector2 BottomRight => new Vector2((idx + 1) * CHUNK_WIDTH_INNER, (idy + 1) * CHUNK_HEIGHT_INNER);
         public Vector2 WorldToUV(Vector2 worldPosition) => (worldPosition - TopLeft + Vector2.One * CHUNK_PADDING) / new Vector2(CHUNK_WIDTH, CHUNK_HEIGHT);
+
+        /// <summary>
+        /// 检查区块存在性和内容
+        /// </summary>
+        /// <returns> 是否可以进行区块更新 </returns>
+        public static bool IsChunkReady(PSChunk chunk) => chunk != null && chunk.loaded && chunk.content != null && !chunk.content.IsContentLost;
 
         public PSChunk(int idx, int idy)
         {
@@ -240,9 +250,10 @@ namespace PixelSandbox
 
         public void UpdateCrossChunk()
         {
+            updateTimeTag = PSSandboxSystem.Instance.timeTag;
             Utils.Swap(ref content, ref swap);
             GraphicsDevice device = Main.graphics.GraphicsDevice;
-            
+
             device.SetRenderTarget(swap);
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque);
             PSChunk other = null;
@@ -250,14 +261,17 @@ namespace PixelSandbox
             float[] targetGridY = new float[] { 0, PADDING_SAND, PADDING_SAND + CHUNK_HEIGHT_SAND_INNER };
             float[] sourceGridX = new float[] { PADDING_SAND, PADDING_SAND, CHUNK_WIDTH_SAND_INNER };
             float[] sourceGridY = new float[] { PADDING_SAND, PADDING_SAND, CHUNK_HEIGHT_SAND_INNER };
+            // 从周围区块复制边缘数据到本区块
             for (int i = -1; i <= 1; i++)
                 for (int j = -1; j <= 1; j++)
                     if (i != 0 || j != 0)
                     {
                         other = PSSandboxSystem.TryGetChunk(idx + i, idy + j);
-                        if (other != null && other.recentTimeTag >= recentTimeTag - (i < 0 || (i == 0 && j < 0) ? 0 : 1))
+                        if (other != null && other.loaded)
                         {
-                            Main.spriteBatch.Draw(i < 0 || (i == 0 && j < 0) ? other.swap : other.content,
+                            Main.spriteBatch.Draw(
+                                // 如果刚刚更新过 内容就被交换到了swap
+                                other.updateTimeTag == updateTimeTag ? other.swap : other.content,
                                 new Vector2(targetGridX[i + 1], targetGridY[j + 1]),
                                 new Rectangle((int)sourceGridX[1 - i], (int)sourceGridY[1 - j],
                                     i == 0 ? CHUNK_WIDTH_SAND_INNER : PADDING_SAND,
@@ -277,6 +291,38 @@ namespace PixelSandbox
             Main.spriteBatch.End();
         }
 
+        /// <summary>
+        /// 从周围区块复制边缘数据到本区块
+        /// 连接未加载区块，填充边缘防止漏沙
+        /// 如果不加这段，落沙可以从未加载的区块流走
+        /// </summary>
+        public void UpdateChunkGuard()
+        {
+            GraphicsDevice device = Main.graphics.GraphicsDevice;
+            
+            device.SetRenderTarget(mask);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque);
+            PSChunk other = null;
+            float[] targetGridX = new float[] { 0, 0, PADDING_SAND + CHUNK_WIDTH_SAND_INNER };
+            float[] targetGridY = new float[] { 0, 0, PADDING_SAND + CHUNK_HEIGHT_SAND_INNER };
+            for (int i = -1; i <= 1; i++)
+                for (int j = -1; j <= 1; j++)
+                    if ((i != 0) != (j != 0))
+                    {
+                        other = PSSandboxSystem.TryGetChunk(idx + i, idy + j);
+                        if (other == null || !other.loaded)
+                        {
+                            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value,
+                                new Vector2(targetGridX[i + 1], targetGridY[j + 1]) * SAND_SIZE,
+                                new Rectangle(0, 0,
+                                    i == 0 ? CHUNK_WIDTH : CHUNK_PADDING,
+                                    j == 0 ? CHUNK_HEIGHT : CHUNK_PADDING),
+                                Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
+                        }
+                    }
+            Main.spriteBatch.End();
+        }
+
         public static void StepLightState()
         {
             if (lightUpdateCounter-- <= 0)
@@ -285,6 +331,8 @@ namespace PixelSandbox
 
         public void Update()
         {
+            if (!loaded)
+                return;
             if (mask.IsContentLost || --maskUpdateCounter <= 0)
             {
                 UpdateMask();
@@ -294,9 +342,11 @@ namespace PixelSandbox
             {
                 SampleLight();
             }
+            UpdateChunkGuard();
 
             GraphicsDevice device = Main.graphics.GraphicsDevice;
             device.SetRenderTarget(content);
+
             Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
             Effect behaviorShader = PSSandboxSystem.behaviorShader;
             behaviorShader.Parameters["uTex1"].SetValue(swap);
@@ -307,6 +357,7 @@ namespace PixelSandbox
             Main.spriteBatch.Draw(swap, Vector2.Zero, Color.White);
             Main.spriteBatch.End();
 
+            // 额外下落pass
             if (Main.rand.NextBool(2))
             {
                 Utils.Swap(ref content, ref swap);
@@ -314,13 +365,13 @@ namespace PixelSandbox
                 Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque);
                 behaviorShader.Parameters["uTex1"].SetValue(swap);
                 behaviorShader.Parameters["uTex2"].SetValue(mask);
-                behaviorShader.Parameters["uHashSeed"].SetValue(Vector2.One * 2.1f * (float)Main.timeForVisualEffects);
+                behaviorShader.Parameters["uHashSeed"].SetValue(Vector2.One * 1e3f * 2.1f * MathHelper.WrapAngle((float)Main.timeForVisualEffects * 1e-3f));
                 behaviorShader.CurrentTechnique.Passes["ExtraFall"].Apply();
                 Main.spriteBatch.Draw(swap, Vector2.Zero, Color.White);
                 Main.spriteBatch.End();
             }
 
-            if (PixelSandbox.DEBUG_MODE && Main.LocalPlayer != null && Main.LocalPlayer.controlThrow)
+            if (PixelSandbox.DebugMode && Main.LocalPlayer != null && Main.LocalPlayer.controlThrow)
             {
                 Vector2 mousePos = new Vector2(Main.mouseX, Main.mouseY) + Main.Camera.UnscaledPosition;
                 Point pos = ((mousePos - TopLeft) / SAND_SIZE).ToPoint();
@@ -336,13 +387,15 @@ namespace PixelSandbox
                     content.SetData(0, new Rectangle(pos.X, pos.Y, 2, 2), buffer, 0, buffer.Length);
                 }
                 Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-                Main.spriteBatch.Draw(TextureAssets.Bubble.Value, pos.ToVector2(), Color.White);
+                Main.spriteBatch.Draw(TextureAssets.Bubble.Value, pos.ToVector2(), null, Color.White, 0, Vector2.Zero, 5, SpriteEffects.None, 0);
                 Main.spriteBatch.End();
             }
         }
 
         public void Draw()
         {
+            if (!loaded)
+                return;
             Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
             Effect behaviorShader = PSSandboxSystem.behaviorShader;
             behaviorShader.Parameters["uTex1"].SetValue(content);
@@ -355,13 +408,17 @@ namespace PixelSandbox
             behaviorShader.Parameters["uStep"].SetValue(new Vector2(1 / (float)CHUNK_WIDTH_SAND, 1 / (float)CHUNK_HEIGHT_SAND));
 
             behaviorShader.CurrentTechnique.Passes["Display"].Apply();
+            // 绘制固体mask
             // Main.spriteBatch.Draw(mask, Position - Main.screenPosition - Vector2.One * CHUNK_PADDING, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
+            // 绘制投影mask
+            // Main.spriteBatch.Draw(nonSolidMask, Position - Main.screenPosition - Vector2.One * CHUNK_PADDING, null, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
             Rectangle frame = content.Frame();
             frame.Inflate(-PADDING_SAND, -PADDING_SAND);
             Main.spriteBatch.Draw(content, Position - Main.screenPosition, frame, Color.White, 0, Vector2.Zero, SAND_SIZE, SpriteEffects.None, 0);
             // Main.spriteBatch.Draw(content, Position - Main.screenPosition - Vector2.One * CHUNK_PADDING, null, Color.White, 0, Vector2.Zero, SAND_SIZE, SpriteEffects.None, 0);
             Main.spriteBatch.End();
-            if (PixelSandbox.SHOW_CHUNK_BORDER)
+
+            if (ModContent.GetInstance<SandboxConfig>().EnableChunkDisplay)
             {
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
                 Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, Position - Main.screenPosition, new Rectangle(0, 0, CHUNK_WIDTH_SAND_INNER, 1), Color.White, 0, Vector2.Zero, SAND_SIZE, SpriteEffects.None, 0);
@@ -370,26 +427,18 @@ namespace PixelSandbox
             }
         }
 
-        public async Task SaveChunk(string filename)
+        public async Task SaveChunk(string filename, bool disposeAfterSaved = true)
         {
-            if (saving)
+            if (saving || !(loaded && loadingOrLoaded))
                 return;
             saving = true;
-            EnsureBuffer();
-            List<byte> bytesArray = new();
+            var bytesArray = new byte[CHUNK_WIDTH_SAND_INNER * CHUNK_HEIGHT_SAND_INNER * 16];
             await Main.RunOnMainThread(() =>
             {
                 lock (drawLock)
                 {
                     EnsureRenderTargets();
-                    content.GetData(buffer);
-                }
-                for (int i = 0; i < CHUNK_WIDTH_SAND * CHUNK_HEIGHT_SAND; i++)
-                {
-                    bytesArray.AddRange(BitConverter.GetBytes(buffer[i].X));
-                    bytesArray.AddRange(BitConverter.GetBytes(buffer[i].Y));
-                    bytesArray.AddRange(BitConverter.GetBytes(buffer[i].Z));
-                    bytesArray.AddRange(BitConverter.GetBytes(buffer[i].W));
+                    content.GetData<byte>(0, SandArea, bytesArray, 0, bytesArray.Length);
                 }
             });
             using (var fileStream = File.Open(filename, FileMode.OpenOrCreate))
@@ -397,56 +446,63 @@ namespace PixelSandbox
                 fileStream.Seek(0, SeekOrigin.Begin);
                 await fileStream.WriteAsync(bytesArray.ToArray());
             }
+            if (disposeAfterSaved)
+            {
+                await Main.RunOnMainThread(() =>
+                {
+                    lock (drawLock)
+                    {
+                        TryDisposeRenderTargets();
+                    }
+                });
+                loaded = false;
+                loadingOrLoaded = false;
+            }
             saving = false;
         }
 
         public async Task LoadChunk(string filename)
         {
-            if (loadingOrLoaded)
+            if (loadingOrLoaded || saving)
                 return;
             loadingOrLoaded = true;
-            EnsureBuffer();
             if (!File.Exists(filename))
+            {
+                loaded = true;
                 return;
+            }
             using (var fileStream = File.Open(filename, FileMode.Open))
             {
                 fileStream.Seek(0, SeekOrigin.Begin);
-                byte[] bytesArray = new byte[CHUNK_WIDTH_SAND * CHUNK_HEIGHT_SAND * 16];
-                int bytes_total = CHUNK_WIDTH_SAND * CHUNK_HEIGHT_SAND * 16;
+                byte[] bytesArray = new byte[CHUNK_WIDTH_SAND_INNER * CHUNK_HEIGHT_SAND_INNER * 16];
                 int head = 0;
-                while (head < bytes_total)
+                while (head < bytesArray.Length)
                 {
-                    int result = await fileStream.ReadAsync(bytesArray, head, bytes_total - head);
+                    int result = await fileStream.ReadAsync(bytesArray, head, bytesArray.Length - head);
                     head += result;
                     if (result <= 0)
                         break;
                 }
-                if (head == bytes_total)
+                if (head == bytesArray.Length)
                 {
-                    for (int i = 0; i < CHUNK_WIDTH_SAND * CHUNK_HEIGHT_SAND; i++)
-                        buffer[i] = new Vector4
-                        (
-                            BitConverter.ToSingle(bytesArray.AsSpan(i * 16 + 0, 4)),
-                            BitConverter.ToSingle(bytesArray.AsSpan(i * 16 + 4, 4)),
-                            BitConverter.ToSingle(bytesArray.AsSpan(i * 16 + 8, 4)),
-                            BitConverter.ToSingle(bytesArray.AsSpan(i * 16 + 12, 4))
-                        );
                     await Main.RunOnMainThread(() =>
                     {
                         lock (drawLock)
                         {
                             EnsureRenderTargets();
-                            content.SetData(buffer);
+                            var origTargets = Main.graphics.GraphicsDevice.GetRenderTargets();
+                            Main.graphics.GraphicsDevice.SetRenderTargets(swap);
+                            Main.graphics.GraphicsDevice.Clear(Color.Transparent);
+                            Main.graphics.GraphicsDevice.SetRenderTargets(content);
+                            Main.graphics.GraphicsDevice.Clear(Color.Transparent);
+                            content.SetData<byte>(0, SandArea, bytesArray, 0, bytesArray.Length);
+                            Main.graphics.GraphicsDevice.SetRenderTargets(origTargets);
+                            maskUpdateCounter = 0;
                         }
                     });
                 }
             }
-        }
-
-        private void EnsureBuffer()
-        {
-            if (buffer == null || buffer.Length != CHUNK_WIDTH_SAND * CHUNK_HEIGHT_SAND)
-                buffer = new Vector4[CHUNK_WIDTH_SAND * CHUNK_HEIGHT_SAND];
+            loaded = true;
         }
 
         public void EnsureRenderTargets()
@@ -456,6 +512,21 @@ namespace PixelSandbox
             EnsureMask(ref mask);
             EnsureMask(ref nonSolidMask);
             EnsureLight();
+        }
+        
+        private void TryDisposeRenderTargets()
+        {
+            if (content != null && !content.IsDisposed)
+                content.Dispose();
+            if (swap != null && !swap.IsDisposed)
+                swap.Dispose();
+            if (mask != null && !mask.IsDisposed)
+                mask.Dispose();
+            if (nonSolidMask != null && !nonSolidMask.IsDisposed)
+                nonSolidMask.Dispose();
+            if (light != null && !light.IsDisposed)
+                light.Dispose();
+            content = swap = mask = nonSolidMask = light = null;
         }
 
         public static void EnsureContent(ref RenderTarget2D content)
@@ -503,6 +574,10 @@ namespace PixelSandbox
                     swap.Dispose();
                 if (mask != null && !mask.IsDisposed)
                     mask.Dispose();
+                if (nonSolidMask != null && !nonSolidMask.IsDisposed)
+                    nonSolidMask.Dispose();
+                if (light != null && !light.IsDisposed)
+                    light.Dispose();
             });
         }
     }

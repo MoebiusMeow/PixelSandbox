@@ -1,1 +1,67 @@
-Pixel Sandbox is a pretty cool mod, it does...this. Modify this file with a description of your mod.
+﻿[c/00FF00:Pixel Sandbox 像素沙盒]
+
+A mod that adds a interactable falling sand system (similar to Noita) using GPU and chunk loading.
+The sand area can be as large as the whole world.
+为全世界添加使用GPU计算和区块加载的高效落沙系统（类似Noita）。
+
+This is an [c/FFFF00:Open Source Mod (under MIT License)]! Feel free to use these code in your own project!
+本MOD[c/FFFF00:完全开源（MIT协议）]，你可以任意扣代码放到自己Mod里
+
+
+Features:
++ Powder is generated whenever a tile is destroyed
++ Efficient pixel-wise sandbox simulation (using GPU)
++ Lighting system with cool normal textures
+
+Control:
++ You can stand on sand piles
++ Hold 'Up' to step onto the sand piles
++ Hold 'Down' to jump off from sand piles
+
+Items:
++ Vacuum Cleaner: Craft with 3 iron bars and 10 sand blocks. You can use this tool to collect sand (producing sandbags).
++ Sandbag: Can be extracted for various loots
+
+
+
+Warnings:
+* The sand data of each chunk is saved as local files in a folder named "sandbox_<WorldName>".
+* Therefore, the sand data is not synced in multi-player. But it still works on each client.
+
+
+
+Mail: MoebiusMeow@gmail.com
+
+Version 1.0.0
+by Moebius Meow
+
+
+主要功能:
++ 当破坏物块时，会产生对应的沙粒
++ 高效的逐像素落沙模拟系统，使用GPU和区块加速
++ 带法线的酷炫光照
+
+操作：
++ 你可以站在沙子上
++ 按住“上”走上沙堆
++ 按住“下”跳下
+
+物品:
++ 吸尘器: 材料是3个铁锭和10个沙块。可以用来收集沙子产生沙袋
++ 沙袋: 可以在提炼机提取产生各种物品
+
+
+注意事项：
+* 区块数据存储在名为"sandbox_<WorldName>"的本地目录下.
+* 因此，多人联机不会同步沙子数据。但是每个人都能正常和自己客户端的沙子交互。
+
+
+反馈和联系作者可以联系…嗯？想加东西？如果你是Mod开发爱好者，可以干脆拷代码走然后做一个自己的沙盒
+
+本来这个Mod是个技术分享，结果扩充了一些内容出来，可以给普通玩家游玩。
+如果你找的是有更多粒子类型的CPU落沙Mod，请看小k（B站 @-Kyoll-）做的有趣玩意儿！
+
+
+MoebiusMeow@qq.com
+Bilibili @三月猫MMU
+

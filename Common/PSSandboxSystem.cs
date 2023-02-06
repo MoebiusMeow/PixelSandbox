@@ -1,6 +1,7 @@
 using Humanizer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PixelSandbox.Configs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,9 +18,6 @@ namespace PixelSandbox
 {
     public class PSSandboxSystem : ModSystem
     {
-        public static int PREFERED_CHUNKS = 17;
-        public static int CHUNK_MIN_UNLOAD_DELAY = 60;
-
         public bool inited = false;
         public PSChunk[,] chunks = null;
         public List<PSChunk> recentChunks = null;
@@ -155,20 +153,15 @@ namespace PixelSandbox
             return Path.Combine(Path.Combine(Main.WorldPath, "sandbox_{0}".FormatWith(Main.worldName)), "chunk_tmp_{0}_{1}".FormatWith(chunk.idx, chunk.idy));
         }
 
-        public async void EnsureSingleChunk(int i, int j, bool load = true)
+        public void EnsureSingleChunk(int i, int j, bool load = true)
         {
+            if (i < 0 || i >= Instance.chunks.GetLength(0) || j < 0 || j >= Instance.chunks.GetLength(1))
+                return;
             if (chunks[i, j] == null)
                 chunks[i, j] = new(i, j);
             chunks[i, j].EnsureRenderTargets();
-            if (load && recentChunks.IndexOf(chunks[i, j]) == -1)
-                await chunks[i, j].LoadChunk(ChunkFilename(chunks[i, j]));
-        }
-
-        public void EnsureChunks(Vector2 topLeft, Vector2 bottomRight)
-        {
-            for (int i = (int)(topLeft.X / PSChunk.CHUNK_WIDTH_INNER); i <= (int)(bottomRight.X / PSChunk.CHUNK_WIDTH_INNER); i++)
-                for (int j = (int)(topLeft.Y / PSChunk.CHUNK_HEIGHT_INNER); j <= (int)(bottomRight.Y / PSChunk.CHUNK_HEIGHT_INNER); j++)
-                    EnsureSingleChunk(i, j);
+            if (load && !chunks[i, j].loadingOrLoaded)
+                _ = chunks[i, j].LoadChunk(ChunkFilename(chunks[i, j]));
         }
 
         public void MarkRecent(PSChunk chunk)
@@ -189,23 +182,28 @@ namespace PixelSandbox
             frameSeed = Main.rand.NextFloat();
             Vector2 topLeft = Main.Camera.ScaledPosition;
             Vector2 bottomRight = Main.Camera.ScaledSize + topLeft;
-            EnsureChunks(topLeft, bottomRight);
             int leastChunks = 0;
-            for (int i = (int)(topLeft.X / PSChunk.CHUNK_WIDTH_INNER); i <= (int)(bottomRight.X / PSChunk.CHUNK_WIDTH_INNER); i++)
-                for (int j = (int)(topLeft.Y / PSChunk.CHUNK_HEIGHT_INNER); j <= (int)(bottomRight.Y / PSChunk.CHUNK_HEIGHT_INNER); j++)
+            var padding = ModContent.GetInstance<SandboxConfig>().ScreenPadding;
+            for (int i = (int)((topLeft.X - padding) / PSChunk.CHUNK_WIDTH_INNER); i <= (int)((bottomRight.X + padding) / PSChunk.CHUNK_WIDTH_INNER); i++)
+                for (int j = (int)((topLeft.Y - padding) / PSChunk.CHUNK_HEIGHT_INNER); j <= (int)((bottomRight.Y + padding) / PSChunk.CHUNK_HEIGHT_INNER); j++)
                 {
-                    MarkRecent(chunks[i, j]);
-                    leastChunks += 1;
+                    EnsureSingleChunk(i, j);
+                    var chunk = TryGetChunk(i, j);
+                    if (chunk != null)
+                    {
+                        MarkRecent(chunks[i, j]);
+                        leastChunks += 1;
+                    }
                 }
             recentChunks.Sort((PSChunk a, PSChunk b) =>
                 a.recentTimeTag == b.recentTimeTag ? 0 : 
                 a.recentTimeTag > b.recentTimeTag ? -1 : 1);
-            if (recentChunks.Count > PREFERED_CHUNKS && recentChunks.Count > leastChunks)
+            if (recentChunks.Count > leastChunks)
             {
-                if (recentChunks[^1].recentTimeTag + CHUNK_MIN_UNLOAD_DELAY < timeTag)
+                if (recentChunks.Count > ModContent.GetInstance<SandboxConfig>().ChunkCount || 
+                    recentChunks[^1].recentTimeTag + ModContent.GetInstance<SandboxConfig>().UnloadDelay * 60f < timeTag)
                 {
                     _ = recentChunks[^1].SaveChunk(ChunkFilename(recentChunks[^1]));
-                    chunks[recentChunks[^1].idx, recentChunks[^1].idy] = null;
                     recentChunks.RemoveAt(recentChunks.Count - 1);
                 }
             }
@@ -246,7 +244,8 @@ namespace PixelSandbox
         /// 会把所有相关区块绘制到一个临时RT上处理
         /// 特效实现使用callback传入
         /// </summary>
-        public void UpdateChunksEffect(Vector2 topLeft, Vector2 bottomRight, Action<GraphicsDevice, Vector2, Vector2> callback)
+        /// <param name="soft"> 不唤醒界外区块 </param>
+        public void UpdateChunksEffect(Vector2 topLeft, Vector2 bottomRight, Action<GraphicsDevice, Vector2, Vector2> callback, bool soft = false)
         {
             if (!SandEngineAvailable)
                 return;
@@ -263,14 +262,21 @@ namespace PixelSandbox
 
             var origTargets = Main.graphics.GraphicsDevice.GetRenderTargets();
             var device = Main.graphics.GraphicsDevice;
-            EnsureChunks(topLeft, bottomRight);
-            for (int i = (int)(topLeft.X / PSChunk.CHUNK_WIDTH_INNER); i <= (int)(bottomRight.X / PSChunk.CHUNK_WIDTH_INNER); i++)
-                for (int j = (int)(topLeft.Y / PSChunk.CHUNK_HEIGHT_INNER); j <= (int)(bottomRight.Y / PSChunk.CHUNK_HEIGHT_INNER); j++)
-                    MarkRecent(chunks[i, j]);
+            if (!soft)
+            {
+                for (int i = (int)(topLeft.X / PSChunk.CHUNK_WIDTH_INNER); i <= (int)(bottomRight.X / PSChunk.CHUNK_WIDTH_INNER); i++)
+                    for (int j = (int)(topLeft.Y / PSChunk.CHUNK_HEIGHT_INNER); j <= (int)(bottomRight.Y / PSChunk.CHUNK_HEIGHT_INNER); j++)
+                    {
+                        EnsureSingleChunk(i, j);
+                        var chunk = TryGetChunk(i, j);
+                        if (chunk != null)
+                            MarkRecent(chunk);
+                    }
+            }
 
             device.SetRenderTarget(effectRTSwap);
-            device.Clear(Color.Red);
-            foreach (var chunk in recentChunks) if (chunk != null && chunk.content != null && !chunk.content.IsContentLost)
+            device.Clear(Color.Transparent);
+            foreach (var chunk in recentChunks) if (PSChunk.IsChunkReady(chunk))
             {
                 Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
                 Main.spriteBatch.Draw(chunk.content, (chunk.TopLeft - topLeft) / PSChunk.SAND_SIZE, PSChunk.SandArea, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
@@ -281,7 +287,7 @@ namespace PixelSandbox
 
             topLeft /= PSChunk.SAND_SIZE;
             bottomRight /= PSChunk.SAND_SIZE;
-            foreach (var chunk in recentChunks) if (chunk != null && chunk.content != null && !chunk.content.IsContentLost)
+            foreach (var chunk in recentChunks) if (PSChunk.IsChunkReady(chunk))
             {
                 Vector2 targetPos = chunk.TopLeft / PSChunk.SAND_SIZE;
                 float l = MathF.Max(topLeft.X, targetPos.X);
@@ -313,16 +319,18 @@ namespace PixelSandbox
 
             Vector2 topLeft = Main.Camera.ScaledPosition;
             Vector2 bottomRight = Main.Camera.ScaledSize + topLeft;
-            EnsureChunks(topLeft, bottomRight);
             for (int i = (int)(topLeft.X / PSChunk.CHUNK_WIDTH_INNER); i <= (int)(bottomRight.X / PSChunk.CHUNK_WIDTH_INNER); i++)
                 for (int j = (int)(topLeft.Y / PSChunk.CHUNK_HEIGHT_INNER); j <= (int)(bottomRight.Y / PSChunk.CHUNK_HEIGHT_INNER); j++)
-                    chunks[i, j].Draw();
+                {
+                    EnsureSingleChunk(i, j);
+                    TryGetChunk(i, j)?.Draw();
+                }
 
             Main.graphics.GraphicsDevice.SetRenderTargets(origTargets);
         }
 
         /// <summary>
-        /// 进行于引擎关系不大的游戏内容相关更新
+        /// 进行游戏内容相关更新
         /// </summary>
         public void UpdateGameContents()
         {
@@ -332,59 +340,18 @@ namespace PixelSandbox
 
             foreach (var player in Main.player)
             {
-                if (!(player.active && player.HeldItem != null && player.HeldItem.ModItem is Contents.Items.VacuumCleaner cleaner))
+                if (!(player.active && (player.HeldItem?.ModItem?.GetType().IsAssignableTo(typeof(PSModItem)) ?? false)))
                     continue;
-                if (player.itemAnimation <= 0)
+                if (player.itemAnimation <= 0 || !player.ItemAnimationActive)
                     continue;
-                Vector2 targetPos = player.Bottom + new Vector2(player.Directions.X * 40, - 15);
-                targetPos -= Vector2.One * 30;
-
-                float sandCount = 0;
-                // 捕获局部变量来获取返回值
-                var callback = (GraphicsDevice device, Vector2 topLeft, Vector2 bottomRight) =>
-                {
-                    Vector2 center = Vector2.One * 0.5f;
-                    float radius = 0.45f;
-                    float centrifuge = 0.07f;
-
-                    var data = new Vector4[effectRT.Width * effectRT.Height];
-                    effectRTSwap.GetData(data);
-                    for (int i = 0; i < effectRT.Width; i++)
-                        for (int j = 0; j < effectRT.Height; j++)
-                        {
-                            Vector2 uv = new Vector2(i / (float)effectRT.Width, j / (float)effectRT.Height);
-                            Vector4 value = data[i + j * effectRT.Width];
-                            if ((uv - center).Length() <= radius && value.W > 0)
-                            {
-                                sandCount += (radius - (uv - center).Length()) / radius;
-                            }
-                        }
-
-                    device.SetRenderTarget(effectRT);
-                    Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
-                    behaviorShader.Parameters["uTex1"].SetValue(effectRTSwap);
-                    behaviorShader.Parameters["uCircleCenter"].SetValue(center);
-                    behaviorShader.Parameters["uCircleRadius"].SetValue(radius);
-                    behaviorShader.Parameters["uCircleCentrifuge"].SetValue(centrifuge);
-                    behaviorShader.Parameters["uCircleRotation"].SetValue(1.2f * Main.LocalPlayer.direction);
-                    behaviorShader.CurrentTechnique.Passes["BlackHole"].Apply();
-                    Main.spriteBatch.Draw(effectRTSwap, Vector2.Zero, Color.White);
-                    Main.spriteBatch.End();
-                };
-                UpdateChunksEffect(targetPos, targetPos + Vector2.One * 60, callback);
-
-                int lastBags = cleaner.sandBagFilled;
-                cleaner.sandCount += sandCount;
-                if (!player.controlUseItem && player.itemAnimation == 1)
-                    SoundEngine.PlaySound(SoundID.Item23 with { MaxInstances = 1 }, player.Center);
-                if (cleaner.sandBagFilled > lastBags)
-                {
-                    var message = "{0} ".FormatWith(cleaner.sandBagFilled) +
-                        PixelSandbox.ModTranslate(cleaner.sandBagFilled > 1 ? "SandBagsFilledHint" : "SandBagFilledHint", "Misc.");
-                    int id = CombatText.NewText(player.getRect(), Color.DarkOrange, message, true);
-                    var combatText = Main.combatText[id];
-                    SoundEngine.PlaySound(SoundID.Item1 with { MaxInstances = 1 }, player.Center);
-                }
+                PSModItem item = player.HeldItem.ModItem as PSModItem;
+                var nl = null as PSModItem;
+                item?.Behavior.PlayerUseAnimation?.Invoke(item, player);
+            }
+            foreach (var p in Main.projectile)
+            {
+                PSModProjectile projectile = p.ModProjectile as PSModProjectile;
+                projectile?.Behavior.Update?.Invoke(projectile);
             }
             Main.graphics.GraphicsDevice.SetRenderTargets(origTargets);
         }

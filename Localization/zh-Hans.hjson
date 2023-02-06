@@ -11,13 +11,16 @@ Mods: {
 	PixelSandbox: {
 		ItemName: {
 			SandBag: 沙袋
-			VacuumCleaner: 吸尘器
+			VacuumCleaner: 阿尔法原型吸尘机
+			VacuumCleanerWood: 木制清沙器
+			VacuumCleanerIron: 吸尘器
+			StrangeStatue: 奇怪的砂质人像
 		}
 
 		ItemTooltip: {
 			SandBag:
 				'''
-				一袋沙子
+				收集好的一袋沙子
 				[c/00FF00:可被提炼机提取]
 
 				‘嗯... 里面是啥?’
@@ -25,15 +28,70 @@ Mods: {
 
 			VacuumCleaner:
 				'''
-				一台先进的矮人工艺吸尘器
-				可以吸收沙粒，产生{$Mods.PixelSandbox.ItemName.SandBag}
-				[c/00FF00:在背包右键取出装满的沙袋]
+				据说这是所有魔法吸尘器最早的原型机
+				你可以感受到其中荒蛮的魔法能量正在脉动
+				[c/FFFF00:不能]收集沙子
+				‘听我说，那些沙丘会移动...’
+				'''
 
+			VacuumCleanerWood:
+				'''
+				清理沙子的基础工具
+				通过快速摇晃桶子产生真空区域吸引沙子
+				可以吸收沙粒，产生{$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
+				[c/00FF00:在背包右键取出装满的沙袋]
+				‘你认真的？’
+				'''
+
+			VacuumCleanerIron:
+				'''
+				一台先进的矮人工艺吸尘器
+				可以吸收沙粒，产生{$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
+				[c/00FF00:在背包右键取出装满的沙袋]
 				‘一位沙子女巫！’
+				'''
+
+			StrangeStatue:
+				'''
+				不知道是谁的砂质人像
+				可以用于制作一些特殊配方
+				具有工作台和炼药桌的功能
+				‘伟大之作’
 				'''
 		}
 
 		MapObject: {
+			StrangeStatueTile: "{$Mods.PixelSandbox.ItemName.StrangeStatue}"
+		}
+
+		Config: {
+			Configs: 设置
+			Performance: 性能设置
+			Debug: 调试功能
+			ChunkCount: {
+				Label: 理想区块个数
+				Tooltip: 活跃区块数超出这个界限时，会从最久未访问的区块开始卸载。(默认 20)
+			}
+			UnloadDelay: {
+				Label: 理想卸载延迟
+				Tooltip: <X> 秒未访问后卸载区块，即使没有超过理想区块数。 (默认 3)
+			}
+			ScreenPadding: {
+				Label: 屏幕边缘扩展
+				Tooltip: 在离屏幕边缘还有一段距离时提前加载区块，设大了会影响性能。 (默认 60)
+			}
+			LightingInterval: {
+				Label: 光照更新频率
+				Tooltip: 降低沙子光照频率仅能稍微提升性能，代价是沙子上的光照看起来有延迟。
+			}
+			EnableChunkDisplay: {
+				Label: 显示区块边缘
+				Tooltip: 用白色网格显示区块边缘
+			}
+			EnableDebugMessage: {
+				Label: 开启调试交互
+				Tooltip: 例如，使用扔出键T来创造沙子
+			}
 		}
 
 		Misc: {

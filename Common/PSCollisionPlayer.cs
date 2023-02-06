@@ -8,14 +8,14 @@ using Terraria.Graphics.Renderers;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace PixelSandbox.Contents
+namespace PixelSandbox
 {
     /// <summary>
     /// 从很久以前的动态平台系统移植了一部分过来
     /// 使用了大量临时变量来适配玩家移动，逻辑很复杂
     /// 可以理解为用PlayerHook当IL编辑来使
     /// </summary>
-    public class SandboxCollisionPlayer : ModPlayer
+    public class PSCollisionPlayer : ModPlayer
     {
         Vector2 localOldPosition, localOldVelocity;
         Vector2 tmpVelocity;

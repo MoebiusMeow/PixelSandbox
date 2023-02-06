@@ -173,7 +173,7 @@ float4 displayFrag(ComputeFragmentIn input) : COLOR0
 	return float4(center.rgb * (light.rgb * (1.0 + uPlayerLightColor * value) + (0.01 / dist) * uPlayerLightColor * value), 1);
 }
 
-float4 blackHoleFrag(ComputeFragmentIn input) : COLOR0
+float4 whiteHoleFrag(ComputeFragmentIn input) : COLOR0
 {
     float2 uv = input.coords;
     float2 d = uv - uCircleCenter;
@@ -185,6 +185,23 @@ float4 blackHoleFrag(ComputeFragmentIn input) : COLOR0
     float rot = (exp(1 - L / uCircleRadius) - 1) * uCircleRotation;
     float2 rotatedD = float2(cos(rot), sin(rot)) * d.x + float2(-sin(rot), cos(rot)) * d.y;
     uv = uCircleCenter + rotatedD / L * lerp(0, uCircleRadius, (L / uCircleRadius - uCircleCentrifuge) / (1 - uCircleCentrifuge));
+    return tex2D(uImage1, uv);
+}
+
+float4 blackHoleFrag(ComputeFragmentIn input) : COLOR0
+{
+    float2 uv = input.coords;
+    float2 d = uv - uCircleCenter;
+    float L = length(d);
+    if (L >= uCircleRadius)
+		return tex2D(uImage1, uv);
+    // if (L >= uCircleCentrifuge * uCircleRadius) return float4(0, 0, 0, 0);
+    float v = sqrt(0.02 / uCircleCentrifuge * (uCircleRadius - L));
+    if (L + v >= uCircleRadius)
+		return float4(0, 0, 0, 0);
+    float rot = (exp(1 - 2 * (L + v) / (uCircleRadius * uCircleCentrifuge)) - 1) * uCircleRotation;
+    float2 rotatedD = float2(cos(rot), sin(rot)) * d.x + float2(-sin(rot), cos(rot)) * d.y;
+    uv = uCircleCenter + rotatedD / L * (L + v);
     return tex2D(uImage1, uv);
 }
 
@@ -203,6 +220,11 @@ technique Technique233
     pass Display
     {
         PixelShader  = compile ps_3_0 displayFrag(); 
+    }
+
+    pass WhiteHole
+    {
+        PixelShader  = compile ps_3_0 whiteHoleFrag(); 
     }
 
     pass BlackHole
