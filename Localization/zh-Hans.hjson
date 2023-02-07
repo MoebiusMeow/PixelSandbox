@@ -14,6 +14,9 @@ Mods: {
 			VacuumCleaner: 阿尔法原型吸尘机
 			VacuumCleanerWood: 木制清沙器
 			VacuumCleanerIron: 吸尘器
+			VacuumCleanerBone: 噬尘印记 
+			VacuumCleanerHallow: 拂月清辉
+			TatteredSpellTome: 破旧的魔典
 			StrangeStatue: 奇怪的砂质人像
 		}
 
@@ -22,8 +25,8 @@ Mods: {
 				'''
 				收集好的一袋沙子 (可以扔出)
 				[c/00FF00:可被提炼机提取]
-
-				‘嗯... 里面是啥?’
+				这是大多数落沙相关材料的来源
+				‘尘沙掩埋着所有的秘密’
 				'''
 
 			VacuumCleaner:
@@ -38,7 +41,7 @@ Mods: {
 				'''
 				清理沙子的基础工具
 				通过快速摇晃桶子产生真空区域吸引沙子
-				可以吸收沙粒，产生{$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
+				可以收集沙粒，产生{$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
 				[c/00FF00:在背包右键取出装满的沙袋]
 				‘你认真的？’
 				'''
@@ -46,9 +49,33 @@ Mods: {
 			VacuumCleanerIron:
 				'''
 				一台先进的矮人工艺吸尘器
-				可以吸收沙粒，产生{$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
+				可以收集沙粒，产生{$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
 				[c/00FF00:在背包右键取出装满的沙袋]
 				‘一位沙子女巫！’
+				'''
+
+			VacuumCleanerBone:
+				'''
+				召唤一个吞噬沙粒的黑暗传送门
+				但是当传送门破碎的时候会遗留黑暗碎屑
+				可以收集沙粒，产生{$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
+				[c/00FF00:在背包右键取出装满的沙袋]
+				‘以眼还眼，以尘报尘’
+				'''
+
+			VacuumCleanerHallow:
+				'''
+				释放吸收沙粒的辉光
+				辉光会呈弦月形状前进
+				可以收集沙粒，产生{$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
+				[c/00FF00:在背包右键取出装满的沙袋]
+				‘江天一色无纤尘，皎皎空中孤月轮’
+				'''
+
+			TatteredSpellTome:
+				'''
+				从沙堆中出土的破旧魔法典籍
+				也许以后有用
 				'''
 
 			StrangeStatue:

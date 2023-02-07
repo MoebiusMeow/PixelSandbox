@@ -87,6 +87,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
             Recipe recipe = CreateRecipe();
             recipe.AddIngredient(ModContent.ItemType<SandBag>(), 999);
             recipe.AddRecipeGroup("Sand", 999);
+            recipe.AddIngredient(ItemID.LunarBar, 3);
             recipe.AddTile(ModContent.TileType<StrangeStatueTile>());
             recipe.Register();
         }

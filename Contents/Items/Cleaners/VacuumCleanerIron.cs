@@ -21,13 +21,14 @@ namespace PixelSandbox.Contents.Items.Cleaners
         public override string Texture => (GetType().Namespace + "." + "VacuumCleanerBase").Replace('.', '/');
 
         public override float CleanerRadius => 82;
-        public override float Centrifuge => 0.2f;
+        public override float Centrifuge => 0.2f * Main.player[Item.playerIndexTheItemIsReservedFor].itemAnimation / Item.useAnimation;
 
         public override void AddRecipes()
         {
             Recipe recipe = CreateRecipe();
             recipe.AddRecipeGroup("IronBar", 3);
             recipe.AddRecipeGroup("Sand", 10);
+            recipe.AddIngredient(ModContent.ItemType<SandBag>());
             recipe.AddTile(TileID.WorkBenches);
             recipe.Register();
         }

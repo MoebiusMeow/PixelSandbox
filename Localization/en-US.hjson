@@ -13,6 +13,9 @@ Mods: {
 			VacuumCleaner: The Prototype Cleaner Alpha
 			VacuumCleanerWood: Wooden Sand Cleaner
 			VacuumCleanerIron: Vacuum Cleaner
+			VacuumCleanerBone: Sigil of Vacuum 
+			VacuumCleanerHallow: Whisking Moonlight
+			TatteredSpellTome: Tattered Spell Tome
 			StrangeStatue: Strange Sandy Figure
 		}
 
@@ -21,7 +24,8 @@ Mods: {
 				'''
 				A bag of collected sand (can be poured out)
 				[c/00FF00:Can be used at Extractinator]
-				‘Hmm... What's inside?’
+				This is where most of the sand-related materials come from
+				‘The sand holds all the mysteries’
 				'''
 
 			VacuumCleaner:
@@ -49,10 +53,34 @@ Mods: {
 				‘A sand witch!’
 				'''
 
+			VacuumCleanerBone:
+				'''
+				Summons a dark portal to vacuum a larger area of sand
+				However, it leaves dark powder when the portal is broken
+				Can be used to collect sand, producing {$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
+				[c/00FF00:Right click in inventory to take out filled bags]
+				‘Eye for eye, dust for dust’
+				'''
+
+			VacuumCleanerHallow:
+				'''
+				Unleash sand-absorbing moonlight
+				The moonlight will advance in a crescent shape
+				Can be used to collect sand, producing {$Mods.PixelSandbox.ItemName.SandBag} :sandbag:
+				[c/00FF00:Right click in inventory to take out filled bags]
+				‘No dust has stained the water blending with the skies, A lonely wheel-like moon shines brilliant far and wide’
+				'''
+
+			TatteredSpellTome:
+				'''
+				Tattered spell tome that unearthed from the sand
+				Might be useful in the future
+				'''
+
 			StrangeStatue:
 				'''
 				A sandy statue of an unknown figure
-				Can be use for some special recipes
+				Can be used for some special recipes
 				Count as workbench and alchemy table
 				‘The Great Work’
 				'''

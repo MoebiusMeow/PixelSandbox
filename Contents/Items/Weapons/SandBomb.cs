@@ -17,9 +17,8 @@ namespace PixelSandbox.Contents.Items.Weapons
 
         public override void SetDefaults()
         {
-            Item.CloneDefaults(ItemID.WetBomb);
+            Item.CloneDefaults(ItemID.DryBomb);
             Item.rare = ItemRarityID.Yellow;
-            // Item.shoot = ModContent.ProjectileType<TriggerProjectileBase>();
         }
     }
 }

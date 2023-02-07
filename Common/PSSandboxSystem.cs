@@ -133,13 +133,16 @@ namespace PixelSandbox
             On.Terraria.Main.DrawCachedNPCs -= DrawHook_DrawCachedNPCs;
             On.Terraria.Collision.StepDown -= Collision_StepDown;
 
-            foreach (var v in effectRTDict.Values)
+            Main.QueueMainThreadAction(() =>
             {
-                if (v.Item1 != null && !v.Item1.IsDisposed)
-                    v.Item1.Dispose();
-                if (v.Item2 != null && !v.Item2.IsDisposed)
-                    v.Item2.Dispose();
-            }
+                foreach (var v in effectRTDict.Values)
+                {
+                    if (v.Item1 != null && !v.Item1.IsDisposed)
+                        v.Item1.Dispose();
+                    if (v.Item2 != null && !v.Item2.IsDisposed)
+                        v.Item2.Dispose();
+                }
+            });
             base.Unload();
         }
 

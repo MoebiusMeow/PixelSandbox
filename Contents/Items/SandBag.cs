@@ -95,6 +95,11 @@ namespace PixelSandbox.Contents.Items
             return true;
         }
 
+        public override bool CanStackInWorld(Item item2)
+        {
+            return CanStack(item2);
+        }
+
         public override bool ConsumeItem(Player player) {
             var result = Item.stack * remain;
             if (MathF.Ceiling(result - SingleUse) < MathF.Ceiling(result))
@@ -143,6 +148,7 @@ namespace PixelSandbox.Contents.Items
             Item.autoReuse = true;
             Item.consumable = true;
             Item.useTurn = true;
+            Item.UseSound = SoundID.Item1;
             remain = 1;
         }
 
@@ -228,6 +234,7 @@ namespace PixelSandbox.Contents.Items
     public class SandBagProjectile : PSModProjectile
     {
         // public override string Texture => $"Terraria/Images/Projectile_{ProjectileID.SandBallFalling}";
+
         public override string Texture => (typeof(SandBag).Namespace + "." + "SandBag").Replace('.', '/');
 
         public override void SetStaticDefaults()

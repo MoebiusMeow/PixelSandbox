@@ -7,6 +7,7 @@ The sand area can be as large as the whole world.
 This is an [c/FFFF00:Open Source Mod (under MIT License)]! Feel free to use these code in your own project!
 本MOD[c/FFFF00:完全开源（MIT协议）]，你可以任意扣代码放到自己Mod里
 
+v1.1: Bug fix, performance improvement, content expansion, vacuum cleaners revamped
 
 Features:
 + Powder is generated whenever a tile is destroyed
@@ -17,10 +18,12 @@ Control:
 + You can stand on sand piles
 + Hold 'Up' to step onto the sand piles
 + Hold 'Down' to jump off from sand piles
++ Check out Mod Config for performance-related options
 
 Items:
-+ Vacuum Cleaner: Craft with 3 iron bars and 10 sand blocks. You can use this tool to collect sand (producing sandbags).
-+ Sandbag: Can be extracted for various loots
++ Basic Vacuum Cleaner: Craft with 20 wood. You can use this tool to collect sand (producing sandbags).
++ More vacuum cleaner variants: Craft with sandbags and other ingredients
++ Sandbag: Can be extracted for various loots. Can be thrown to generate sand.
 
 
 
@@ -32,7 +35,7 @@ Warnings:
 
 Mail: MoebiusMeow@gmail.com
 
-Version 1.0.0
+Version 1.1.0
 by Moebius Meow
 
 
@@ -45,10 +48,12 @@ by Moebius Meow
 + 你可以站在沙子上
 + 按住“上”走上沙堆
 + 按住“下”跳下
++ 在模组选项可以调整性能相关设置
 
 物品:
-+ 吸尘器: 材料是3个铁锭和10个沙块。可以用来收集沙子产生沙袋
-+ 沙袋: 可以在提炼机提取产生各种物品
++ 基础吸尘器: 材料是20个木头。可以用来收集沙子产生沙袋
++ 更多吸尘器变体：用沙袋和其他一些材料制造
++ 沙袋: 可以在提炼机提取产生各种物品。也可以扔出产生沙子。
 
 
 注意事项：

@@ -387,7 +387,7 @@ namespace PixelSandbox
                     content.SetData(0, new Rectangle(pos.X, pos.Y, 2, 2), buffer, 0, buffer.Length);
                 }
                 Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-                Main.spriteBatch.Draw(TextureAssets.Bubble.Value, pos.ToVector2(), null, Color.White, 0, Vector2.Zero, 5, SpriteEffects.None, 0);
+                Main.spriteBatch.Draw(TextureAssets.Bubble.Value, pos.ToVector2(), null, Color.White, 0, Vector2.Zero, 10, SpriteEffects.None, 0);
                 Main.spriteBatch.End();
             }
         }

@@ -146,9 +146,10 @@ namespace PixelSandbox.Contents.Items.Cleaners
             Vector2 targetPos = player.Bottom + new Vector2(player.Directions.X * 10, -18 - radius * Centrifuge * CleanerRadius);
             targetPos -= Vector2.One * CleanerRadius;
 
-            PSSandboxSystem.Instance.UpdateChunksEffect(targetPos, targetPos + Vector2.One * CleanerRadius * 2, callback);
-
             var cleaner = sandboxObject as VacuumCleanerBase;
+            if (player.ItemUsesThisAnimation <= 1 && player.reuseDelay >= cleaner.Item.reuseDelay)
+                PSSandboxSystem.Instance.UpdateChunksEffect(targetPos, targetPos + Vector2.One * CleanerRadius * 2, callback);
+
             int lastBags = cleaner.sandBagFilled;
             cleaner.sandCount += sandIncrease;
             if (!player.controlUseItem && player.itemAnimation == 1)
@@ -158,7 +159,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
                 var message = "{0} ".FormatWith(cleaner.sandBagFilled) +
                     PixelSandbox.ModTranslate(cleaner.sandBagFilled > 1 ? "SandBagsFilledHint" : "SandBagFilledHint", "Misc.");
                 int id = CombatText.NewText(player.getRect(), Color.DarkOrange, message, true);
-                SoundEngine.PlaySound(SoundID.Item1 with { MaxInstances = 1 }, player.Center);
+                SoundEngine.PlaySound(SoundID.Item1 with { MaxInstances = 1, Volume = 0.1f }, player.Center);
             }
         }
 

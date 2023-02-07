@@ -22,7 +22,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
         public override SoundStyle EndSound => SoundID.Item32;
 
         public override float CleanerRadius => 50;
-        public override float Centrifuge => 0.3f;
+        public override float Centrifuge => 0.3f * Main.player[Item.playerIndexTheItemIsReservedFor].itemAnimation / Item.useAnimation;
 
         public override void SetDefaults()
         {
