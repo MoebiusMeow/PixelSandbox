@@ -22,7 +22,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
         public override SoundStyle EndSound => SoundID.Item32;
 
         public override float CleanerRadius => 60;
-        public override float Centrifuge => 0.8f * Main.player[Item.playerIndexTheItemIsReservedFor].itemAnimation / Item.useAnimation;
+        public override float Centrifuge => 0.8f;
 
         public override void SetDefaults()
         {
@@ -50,7 +50,11 @@ namespace PixelSandbox.Contents.Items.Cleaners
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
-            Projectile.NewProjectile(Item.GetSource_ReleaseEntity(), player.position, Vector2.Zero, ModContent.ProjectileType<HallowCleanerGlow>(), 0, 0, player.whoAmI);
+            if (player.whoAmI == Main.myPlayer)
+            {
+                Projectile.NewProjectileDirect(Item.GetSource_ReleaseEntity(), player.position, Vector2.Zero, ModContent.ProjectileType<HallowCleanerGlow>(), 0, 0, player.whoAmI)
+                    .netUpdate = true;
+            }
             return base.Shoot(player, source, position, velocity, type, damage, knockback);
         }
 
@@ -86,13 +90,14 @@ namespace PixelSandbox.Contents.Items.Cleaners
         public override void SetDefaults()
         {
             base.SetDefaults();
-            Projectile.CloneDefaults(ProjectileID.SandBallFalling);
+            Projectile.CloneDefaults(ProjectileID.WaterBolt);
             Projectile.aiStyle = -1;
             Projectile.timeLeft = 500;
             Projectile.width = 32;
             Projectile.height = 22;
             Projectile.friendly = true;
             Projectile.tileCollide = false;
+            Projectile.netImportant = true;
             DrawOriginOffsetX = 0;
             DrawOriginOffsetY = 0;
         }
@@ -122,7 +127,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
             {
                 Projectile.position = player.itemLocation - cleaner.Item.Size + Vector2.UnitX * Projectile.width * player.direction;
                 if (player.direction < 0)
-                    Projectile.position.X += 18;
+                    Projectile.position.X += 22;
                 Projectile.position.X = MathF.Floor(Projectile.position.X);
                 Projectile.rotation = player.itemRotation + player.fullRotation;
                 Projectile.Center = (Projectile.Center - (player.MountedCenter - player.Size * 0.5f + player.fullRotationOrigin))
@@ -147,7 +152,11 @@ namespace PixelSandbox.Contents.Items.Cleaners
             {
                 Projectile.timeLeft = Math.Min(Projectile.timeLeft, 2);
                 if (player.heldProj != -1)
+                {
                     Main.projectile[player.heldProj].timeLeft = 500;
+                    if (player.whoAmI == Main.myPlayer)
+                        Main.projectile[player.heldProj].netUpdate = true;
+                }
                 return;
             }
             player.heldProj = Projectile.whoAmI;
@@ -155,15 +164,15 @@ namespace PixelSandbox.Contents.Items.Cleaners
             if (Projectile.timeLeft == 50)
             {
                 SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.15f, Pitch = -0.5f }, Projectile.Center);
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 4; i++)
                 {
-                    var dust = Dust.NewDustDirect(Projectile.Center + new Vector2(3 + 2 * player.direction, -6), 0, 0, DustID.GoldCoin, 0, 0, 0, default, 0.5f);
+                    var dust = Dust.NewDustDirect(Projectile.Center + new Vector2(3 + 1 * player.direction, -6), 0, 0, DustID.GoldCoin, 0, 0, 0, default, 0.5f);
                     dust.velocity = dust.velocity.SafeNormalize(Vector2.Zero) * 0.6f + player.velocity;
                 }
             }
             else if (Projectile.timeLeft > 50 && Main.rand.NextBool(10))
             {
-                var dust = Dust.NewDustDirect(Projectile.Center + new Vector2(3 + 2 * player.direction, -6), 0, 0, DustID.GoldCoin, 0, 0, 0, default, 0.5f);
+                var dust = Dust.NewDustDirect(Projectile.Center + new Vector2(3 + 1 * player.direction, -6), 0, 0, DustID.GoldCoin, 0, 0, 0, default, 0.5f);
                 dust.velocity = dust.velocity.SafeNormalize(Vector2.Zero) * 0.4f;
             }
             base.AI();
@@ -174,6 +183,8 @@ namespace PixelSandbox.Contents.Items.Cleaners
     {
         public override string Texture => $"Terraria/Images/Projectile_{ProjectileID.WhiteTigerPounce}";
 
+        public HallowCleanerProjectile() => Behavior.Update = Vacuum;
+
         public override void SetStaticDefaults()
         {
             base.SetStaticDefaults();
@@ -182,12 +193,13 @@ namespace PixelSandbox.Contents.Items.Cleaners
         public override void SetDefaults()
         {
             base.SetDefaults();
-            Projectile.CloneDefaults(ProjectileID.SandBallFalling);
+            Projectile.CloneDefaults(ProjectileID.WaterBolt);
             Projectile.aiStyle = -1;
             Projectile.timeLeft = 70;
             Projectile.width = Projectile.height = 42;
             Projectile.friendly = true;
             Projectile.tileCollide = false;
+            Projectile.netImportant = true;
             DrawOriginOffsetX = 0;
             DrawOriginOffsetY = 0;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
@@ -201,7 +213,6 @@ namespace PixelSandbox.Contents.Items.Cleaners
 
         public override void OnSpawn(IEntitySource source)
         {
-            Behavior.Update = Vacuum;
             Projectile.rotation = Main.rand.NextFloatDirection();
             Projectile.scale = 0.1f;
             Projectile.velocity = Projectile.velocity.RotatedBy(-MathF.PI * 0.5f);
@@ -211,7 +222,9 @@ namespace PixelSandbox.Contents.Items.Cleaners
         public override bool PreDraw(ref Color lightColor)
         {
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
+            BlendState blend = BlendState.Additive;
+            blend.ColorBlendFunction = BlendFunction.ReverseSubtract;
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, blend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
             lightColor *= 0.6f;
             return base.PreDraw(ref lightColor);
         }
@@ -343,6 +356,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
                                         newData[dupLast[targetIndex]] = data[dupLast[targetIndex]];
                                     dupLast[targetIndex] = i + j * effectSize.X;
                                 }
+                                else newData[i + j * effectSize.X] = data[i + j * effectSize.X];
                             }
                             else
                             {

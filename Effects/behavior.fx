@@ -8,6 +8,8 @@ float uCircleRadius;
 float uCircleRotation;
 float uCircleCentrifuge;
 
+float2 uUVScale;
+
 float3 uPlayerLightColor;
 
 texture2D uTex0;
@@ -31,7 +33,7 @@ sampler2D uImage1 = sampler_state
 };
 
 texture2D uTex2;
-sampler2D uImageMask = sampler_state
+sampler2D uImage2 = sampler_state
 {
     Texture = <uTex2>;
     MinFilter = Point;
@@ -61,16 +63,16 @@ struct ComputeFragmentIn
 float4 computeFrag(ComputeFragmentIn input) : COLOR0
 {
     float4 center = tex2D(uImage1, input.coords);
-    float4 centerm = tex2D(uImageMask, input.coords);
-    float4 down   = tex2D(uImageMask, input.coords + float2(0, uStep.y));
+    float4 centerm = tex2D(uImage2, input.coords);
+    float4 down   = tex2D(uImage2, input.coords + float2(0, uStep.y));
     float4 downm  = tex2D(uImage1, input.coords + float2(0, uStep.y));
     float4 up     = tex2D(uImage1, input.coords + float2(0, -uStep.y));
     float4 left   = tex2D(uImage1, input.coords + float2(-uStep.x, 0));
-    float4 leftm  = tex2D(uImageMask, input.coords + float2(-uStep.x, 0));
+    float4 leftm  = tex2D(uImage2, input.coords + float2(-uStep.x, 0));
     float4 right  = tex2D(uImage1, input.coords + float2(uStep.x, 0));
     float4 upl    = tex2D(uImage1, input.coords + float2(-uStep.x, -uStep.y));
     float4 downr  = tex2D(uImage1, input.coords + float2(uStep.x, uStep.y));
-    float4 downrm = tex2D(uImageMask, input.coords + float2(uStep.x, uStep.y));
+    float4 downrm = tex2D(uImage2, input.coords + float2(uStep.x, uStep.y));
     // float upr = tex2D(uImage1, input.coords + float2( uStep.x, -uStep.y));
     // if (input.coords.y + 2 * uStep.y >= 1.0) return float4(1, 0, 0, 1);
 
@@ -120,8 +122,8 @@ bool canFall(float2 uv)
 float4 extraFallFrag(ComputeFragmentIn input) : COLOR0
 {
     float4 center = tex2D(uImage1, input.coords);
-    float4 centerm = tex2D(uImageMask, input.coords);
-    float4 down   = tex2D(uImageMask, input.coords + float2(0, uStep.y));
+    float4 centerm = tex2D(uImage2, input.coords);
+    float4 down   = tex2D(uImage2, input.coords + float2(0, uStep.y));
     float4 downm  = tex2D(uImage1, input.coords + float2(0, uStep.y));
     float4 up     = tex2D(uImage1, input.coords + float2(0, -uStep.y));
 
@@ -173,6 +175,21 @@ float4 displayFrag(ComputeFragmentIn input) : COLOR0
 	return float4(center.rgb * (light.rgb * (1.0 + uPlayerLightColor * value) + (0.01 / dist) * uPlayerLightColor * value), 1);
 }
 
+float4 vectorFieldFrag(ComputeFragmentIn input) : COLOR0
+{
+    float2 uv = input.coords / uUVScale;
+    float2 fromUV = (uv + tex2D(uImage1, uv).xy) * uUVScale;
+    float4 from = fromUV.x < 0 ? float4(0, 0, 0, 0) : tex2D(uImage0, fromUV);
+    float2 togoUV = (uv + tex2D(uImage2, uv).xy) * uUVScale;
+    float4 togo = togoUV.x < 0 ? float4(0, 0, 0, 0) : tex2D(uImage0, togoUV);
+    float4 center = tex2D(uImage0, uv);
+
+    if (center.a > 0)
+        return togo.a > 0 ? center : float4(0, 0, 0, 0);
+    else
+        return from.a > 0 ? from : float4(0, 0, 0, 0);
+}
+
 float4 whiteHoleFrag(ComputeFragmentIn input) : COLOR0
 {
     float2 uv = input.coords;
@@ -220,6 +237,11 @@ technique Technique233
     pass Display
     {
         PixelShader  = compile ps_3_0 displayFrag(); 
+    }
+
+    pass VectorField
+    {
+        PixelShader  = compile ps_3_0 vectorFieldFrag(); 
     }
 
     pass WhiteHole

@@ -74,7 +74,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
             base.SetDefaults();
             Item.value = 100000;
             Item.rare = ItemRarityID.Master;
-            Item.UseSound = SoundID.Drip with { Pitch = -0.1f };
+            Item.UseSound = SoundID.Item90 with { Pitch = -0.1f };
             sandCount = 0;
         }
 

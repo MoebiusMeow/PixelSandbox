@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using PixelSandbox.Contents.Items.Cleaners;
 using PixelSandbox.Contents.Items.Materials;
 using PixelSandbox.Contents.Items.Placeable;
+using PixelSandbox.Contents.Items.Weapons;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -60,9 +61,10 @@ namespace PixelSandbox.Contents.Items
                     Vector2 direction = Main.MouseWorld - player.Center;
                     if (direction.Length() > 0)
                         direction.Normalize();
-                    Projectile proj = Projectile.NewProjectileDirect(new EntitySource_ItemUse(Item, Item), player.Center, Item.shootSpeed * direction,
+                    Projectile proj = Projectile.NewProjectileDirect(new EntitySource_ItemUse(player, Item), player.Center, Item.shootSpeed * direction,
                         ModContent.ProjectileType<SandBagProjectile>(), 0, 0, player.whoAmI);
                     proj.timeLeft = (int)(proj.timeLeft * MathF.Min(result, SingleUse) / SingleUse);
+                    proj.netUpdate = true;
                     // var rem = result - MathF.Floor(result);
                     // lastVisualScale = rem == 0 ? 2 : 1 + rem + SingleUse;
                 }
@@ -70,9 +72,9 @@ namespace PixelSandbox.Contents.Items
             return base.UseItem(player);
         }
 
-        public override void OnCreate(ItemCreationContext context)
+        public override void OnCreated(ItemCreationContext context)
         {
-            base.OnCreate(context);
+            base.OnCreated(context);
         }
 
         public override bool CanUseItem(Player player)
@@ -157,7 +159,7 @@ namespace PixelSandbox.Contents.Items
             base.ModifyTooltips(tooltips);
         }
 
-        public override void ExtractinatorUse(ref int resultType, ref int resultStack)
+        public override void ExtractinatorUse(int extractinatorBlockType, ref int resultType, ref int resultStack)
         {
             // 这个函数执行时的Item不是实际Item
             // 不能用于判断实例情况
@@ -218,6 +220,13 @@ namespace PixelSandbox.Contents.Items
                 return;
             }
 
+            if ((value -= 6.0f) <= 0)
+            {
+                resultType = ModContent.ItemType<SandBombAnti>();
+                resultStack = Main.rand.Next(1, 4);
+                return;
+            }
+
             if ((value -= 7.0f) <= 0)
             {
                 resultType = ItemID.Oyster;
@@ -237,6 +246,8 @@ namespace PixelSandbox.Contents.Items
 
         public override string Texture => (typeof(SandBag).Namespace + "." + "SandBag").Replace('.', '/');
 
+        public SandBagProjectile() => Behavior.Update = GenerateSand;
+
         public override void SetStaticDefaults()
         {
             base.SetStaticDefaults();
@@ -245,12 +256,11 @@ namespace PixelSandbox.Contents.Items
         public override void SetDefaults()
         {
             base.SetDefaults();
-            Projectile.CloneDefaults(ProjectileID.SandBallFalling);
+            Projectile.CloneDefaults(ProjectileID.WaterBolt);
             Projectile.aiStyle = -1;
             Projectile.timeLeft = 100;
-            Projectile.width = Projectile.height = 32;
-            DrawOriginOffsetX = 0;
-            DrawOriginOffsetY = 0;
+            Projectile.width = Projectile.height = 28;
+            Projectile.netImportant = true;
         }
 
         public override bool? CanCutTiles()
@@ -260,13 +270,13 @@ namespace PixelSandbox.Contents.Items
 
         public override void OnSpawn(IEntitySource source)
         {
-            Behavior.Update = GenerateSand;
             base.OnSpawn(source);
         }
 
         public override void AI()
         {
             Projectile.scale = Projectile.timeLeft * 0.01f;
+            Projectile.Resize((int)(32 * 0.01f * Projectile.timeLeft), (int)(32 * 0.01f * Projectile.timeLeft));
             Projectile.velocity += Vector2.UnitY * Projectile.timeLeft * 0.01f * 0.4f;
             if (Projectile.velocity.Length() > 0)
                 Projectile.rotation = Projectile.velocity.ToRotation() + MathF.PI;

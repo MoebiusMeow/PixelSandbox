@@ -12,7 +12,7 @@ using Terraria.ModLoader;
 
 namespace PixelSandbox.Contents.Items.Weapons
 {
-    public class SandBomb : ModItem
+    public class SandBombAnti : ModItem
     {
         public override void SetStaticDefaults()
         {
@@ -23,23 +23,23 @@ namespace PixelSandbox.Contents.Items.Weapons
         {
             Item.CloneDefaults(ItemID.DryBomb);
             Item.rare = ItemRarityID.Yellow;
-            Item.shoot = ModContent.ProjectileType<SandBombProjectile>();
+            Item.shoot = ModContent.ProjectileType<SandBombAntiProjectile>();
         }
 
         public override void AddRecipes()
         {
-            CreateRecipe(2).AddIngredient(ItemID.Bomb, 2).AddIngredient(ModContent.ItemType<SandBag>()).Register();
-            CreateRecipe(1).AddIngredient(ItemID.Bomb, 1).AddIngredient(ModContent.ItemType<SandBag>()).Register();
+            CreateRecipe().AddIngredient(ItemID.Bomb).Register();
+            Recipe.Create(ItemID.Bomb).AddIngredient(Type).Register();
         }
     }
 
-    public class SandBombProjectile : PSModProjectile
+    public class SandBombAntiProjectile : PSModProjectile
     {
-        public override string Texture => (typeof(SandBomb).Namespace + "." + "SandBomb").Replace('.', '/');
+        public override string Texture => (typeof(SandBombAnti).Namespace + "." + "SandBombAnti").Replace('.', '/');
 
-        public SandBombProjectile()
+        public SandBombAntiProjectile()
         {
-            Behavior.Update = GenerateSand;
+            Behavior.Update = DegenerateSand;
         }
 
         public override void SetStaticDefaults()
@@ -52,7 +52,7 @@ namespace PixelSandbox.Contents.Items.Weapons
             base.SetDefaults();
             Projectile.CloneDefaults(ProjectileID.DryBomb);
             // Projectile.aiStyle = -1;
-            Projectile.timeLeft = 120;
+            Projectile.timeLeft = 180;
             Projectile.width = 22;
             Projectile.height = 26;
         }
@@ -84,7 +84,7 @@ namespace PixelSandbox.Contents.Items.Weapons
 
         protected Vector4[] data;
 
-        public void GenerateSand(ISandboxObject sandboxObject)
+        public void DegenerateSand(ISandboxObject sandboxObject)
         {
             var callback = (GraphicsDevice device, Vector2 topLeft, Vector2 bottomRight) =>
             {
@@ -102,19 +102,13 @@ namespace PixelSandbox.Contents.Items.Weapons
                     for (int i = 0; i < effectSize.X; i++)
                     {
                         Vector2 uv = new Vector2(i / (float)effectSize.X, j / (float)effectSize.Y);
-                        if ((uv - Vector2.One * 0.5f).Length() > 0.5f || !Main.rand.NextBool(8))
+                        if ((uv - Vector2.One * 0.5f).Length() > 0.5f || Main.rand.NextBool(4))
                             continue;
-                        Vector4 value = data[i + j * effectSize.X];
-                        if (value.W == 0)
-                        {
-                            data[i + j * effectSize.X] = new Vector4(
-                                Color.Lerp(new Color(212, 192, 100), Color.Orange, 0)
-                                .ToVector3() * MathHelper.Lerp(0.9f, 1.0f, Main.rand.NextFloat()), 1);
-                        }
+                        data[i + j * effectSize.X] = Vector4.Zero;
                     }
                 effectRT.SetData(0, new Rectangle(0, 0, effectSize.X, effectSize.Y), data, 0, data.Length);
             };
-            var sandProjectile = sandboxObject as SandBombProjectile;
+            var sandProjectile = sandboxObject as SandBombAntiProjectile;
             float radius = 120;
             Vector2 targetPos = sandProjectile.Projectile.Center;
             targetPos -= Vector2.One * radius;
@@ -128,12 +122,6 @@ namespace PixelSandbox.Contents.Items.Weapons
             if (sandProjectile.Projectile.timeLeft <= 10 && sandProjectile.Projectile.localAI[1] == 0)
             {
                 sandProjectile.Projectile.localAI[1] = 1;
-                if (sandProjectile.Projectile.owner == Main.myPlayer)
-                    for (int i = 0; i < 2; i++)
-                    {
-                        Projectile.NewProjectile(Projectile.GetSource_ReleaseEntity(), Projectile.Center, Main.rand.NextVector2FromRectangle(new Rectangle(-10, -12, 20, 3)),
-                            ModContent.ProjectileType<SandBagProjectile>(), 0, 0, Projectile.owner);
-                    }
                 for (int i = 0; i < 15; i++)
                 {
                     var dust = Dust.NewDustDirect(sandProjectile.Projectile.position, sandProjectile.Projectile.width, sandProjectile.Projectile.height, DustID.Smoke,

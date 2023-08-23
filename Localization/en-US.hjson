@@ -1,4 +1,4 @@
-﻿# You may find this .hjson file approach to translations easier for your mod.
+# You may find this .hjson file approach to translations easier for your mod.
 # .hjson files contain translations for the language specified in the filename. (Make sure this file is UTF-8 encoded only.)
 # The possible languages are: English ("en-US"), German ("de-DE"), Italian ("it-IT"), French ("fr-FR"), Spanish ("es-ES"), Russian ("ru-RU"), Chinese ("zh-Hans"), Portuguese ("pt-BR"), and Polish ("pl-PL")
 # Here in ExampleMod we have organized these files in a folder called Localization. A single file per language makes it extremely easy to to integrate and maintain translations.
@@ -13,9 +13,12 @@ Mods: {
 			VacuumCleaner: The Prototype Cleaner Alpha
 			VacuumCleanerWood: Wooden Sand Cleaner
 			VacuumCleanerIron: Vacuum Cleaner
-			VacuumCleanerBone: Sigil of Vacuum 
+			VacuumCleanerBone: Sigil of Vacuum
 			VacuumCleanerHallow: Whisking Moonlight
 			TatteredSpellTome: Tattered Spell Tome
+			RaidingErosionTome: Raiding Erosion
+			SandBomb: Sand Bomb
+			SandBombAnti: Anti-Sand Bomb
 			StrangeStatue: Strange Sandy Figure
 		}
 
@@ -27,7 +30,6 @@ Mods: {
 				This is where most of the sand-related materials come from
 				‘The sand holds all the mysteries’
 				'''
-
 			VacuumCleaner:
 				'''
 				It is said to be the first prototype of all magical vacuum cleaners
@@ -35,7 +37,6 @@ Mods: {
 				Does [c/FFFF00:not] collect sand
 				‘Listen to me, the dune are moving...’
 				'''
-
 			VacuumCleanerWood:
 				'''
 				A basic tool to clean sand
@@ -44,7 +45,6 @@ Mods: {
 				[c/00FF00:Right click in inventory to take out filled bags]
 				‘Seriously?’
 				'''
-
 			VacuumCleanerIron:
 				'''
 				An advanced dwarf-tech vacuum cleaner
@@ -52,7 +52,6 @@ Mods: {
 				[c/00FF00:Right click in inventory to take out filled bags]
 				‘A sand witch!’
 				'''
-
 			VacuumCleanerBone:
 				'''
 				Summons a dark portal to vacuum a larger area of sand
@@ -61,7 +60,6 @@ Mods: {
 				[c/00FF00:Right click in inventory to take out filled bags]
 				‘Eye for eye, dust for dust’
 				'''
-
 			VacuumCleanerHallow:
 				'''
 				Unleash sand-absorbing moonlight
@@ -70,13 +68,22 @@ Mods: {
 				[c/00FF00:Right click in inventory to take out filled bags]
 				‘No dust has stained the water blending with the skies, A lonely wheel-like moon shines brilliant far and wide’
 				'''
-
 			TatteredSpellTome:
 				'''
 				Tattered spell tome that unearthed from the sand
 				Might be useful in the future
 				'''
-
+			SandBomb:
+				'''
+				A bomb that generates sand
+				Explodes immediately when contact with sand
+				'''
+			SandBombAnti:
+				'''
+				A bomb that destroy sand
+				Explodes immediately when contact with sand
+				Useful in cleaning areas if you don't need to collect sand
+				'''
 			StrangeStatue:
 				'''
 				A sandy statue of an unknown figure
@@ -86,34 +93,38 @@ Mods: {
 				'''
 		}
 
-		MapObject: {
-			StrangeStatueTile: "{$Mods.PixelSandbox.ItemName.StrangeStatue}"
-		}
+		MapObject.StrangeStatueTile: "{$Mods.PixelSandbox.ItemName.StrangeStatue}"
 
 		Config: {
 			Configs: Configs
 			Performance: Performance
 			Debug: Debug
+
 			ChunkCount: {
 				Label: Preferred Chunk Count
 				Tooltip: Starts to unload least recently visited chunks when exceeded. (default 20)
 			}
+
 			UnloadDelay: {
 				Label: Preferred Unload Delay
 				Tooltip: Starts to unload a chunk after <X> seconds since last visit, regardless with chunk count. (default 3)
 			}
+
 			ScreenPadding: {
 				Label: Screen Padding
 				Tooltip: Load chunks within a distance of screen. A larger number would affect performance. (default 60)
 			}
+
 			LightingInterval: {
 				Label: Lighting Frequency
 				Tooltip: Decreasing lighting frequency can slightly improve performance, at the cost of lagging lighting effect.
 			}
+
 			EnableChunkDisplay: {
 				Label: Show Chunk Border
 				Tooltip: Display borders of each chunks
 			}
+
 			EnableDebugMessage: {
 				Label: Enable Debug Features
 				Tooltip: e.g. Use 'Throw' to create sand
@@ -121,13 +132,133 @@ Mods: {
 		}
 
 		Misc: {
-			SandBagContains: Contains 
+			SandBagContains: Contains
 			SandBagFilled: filled sandbag
 			SandBagsFilled: filled sandbags
-			SandBagCurrent: Current Sandbag 
+			SandBagCurrent: Current Sandbag
 			SandBagCurrentFilled: filled
 			SandBagFilledHint: Sandbag Filled!
 			SandBagsFilledHint: Sandbags Filled!
+		}
+
+		Tiles.StrangeStatueTile.MapEntry: Strange Statue Tile
+
+		Items: {
+			VacuumCleaner: {
+				DisplayName: Vacuum Cleaner
+				Tooltip: ""
+			}
+
+			VacuumCleanerBone: {
+				DisplayName: Vacuum Cleaner Bone
+				Tooltip: ""
+			}
+
+			VacuumCleanerHallow: {
+				DisplayName: Vacuum Cleaner Hallow
+				Tooltip: ""
+			}
+
+			VacuumCleanerIron: {
+				DisplayName: Vacuum Cleaner Iron
+				Tooltip: ""
+			}
+
+			VacuumCleanerWood: {
+				DisplayName: Vacuum Cleaner Wood
+				Tooltip: ""
+			}
+
+			TatteredSpellTome: {
+				DisplayName: Tattered Spell Tome
+				Tooltip: ""
+			}
+
+			StrangeStatue: {
+				DisplayName: Strange Statue
+				Tooltip: ""
+			}
+
+			SandBag: {
+				DisplayName: Sand Bag
+				Tooltip: ""
+			}
+
+			CosmosViscoseTome: {
+				DisplayName: Cosmos Viscose Tome
+				Tooltip: ""
+			}
+
+			HollowTome: {
+				DisplayName: Hollow Tome
+				Tooltip: ""
+			}
+
+			PacingMagmaTome: {
+				DisplayName: Pacing Magma Tome
+				Tooltip: ""
+			}
+
+			RaidingErosionTome: {
+				DisplayName: Raiding Erosion Tome
+				Tooltip: ""
+			}
+
+			SandBomb: {
+				DisplayName: Sand Bomb
+				Tooltip: ""
+			}
+
+			SandBombAnti: {
+				DisplayName: Sand Bomb Anti
+				Tooltip: ""
+			}
+		}
+
+		Projectiles: {
+			BoneCleanerProjectile.DisplayName: Bone Cleaner Projectile
+			HallowCleanerGlow.DisplayName: Hallow Cleaner Glow
+			HallowCleanerProjectile.DisplayName: Hallow Cleaner Projectile
+			SandBagProjectile.DisplayName: Sand Bag Projectile
+			RaidingErosionTomeProjectile.DisplayName: Raiding Erosion Tome Projectile
+			SandBombAntiProjectile.DisplayName: Sand Bomb Anti Projectile
+			SandBombProjectile.DisplayName: Sand Bomb Projectile
+		}
+
+		Configs: {
+			SandboxConfig: {
+				DisplayName: "{$Mods.PixelSandbox.Config.Configs}"
+
+				ChunkCount: {
+					Label: "{$Mods.PixelSandbox.Config.ChunkCount.Label}"
+					Tooltip: "{$Mods.PixelSandbox.Config.ChunkCount.Tooltip}"
+				}
+
+				UnloadDelay: {
+					Label: "{$Mods.PixelSandbox.Config.UnloadDelay.Label}"
+					Tooltip: "{$Mods.PixelSandbox.Config.UnloadDelay.Tooltip}"
+				}
+
+				ScreenPadding: {
+					Label: "{$Mods.PixelSandbox.Config.ScreenPadding.Label}"
+					Tooltip: "{$Mods.PixelSandbox.Config.ScreenPadding.Tooltip}"
+				}
+
+				LightingInterval: {
+					Label: "{$Mods.PixelSandbox.Config.LightingInterval.Label}"
+					Tooltip: "{$Mods.PixelSandbox.Config.LightingInterval.Tooltip}"
+				}
+
+				EnableChunkDisplay: {
+					Label: "{$Mods.PixelSandbox.Config.EnableChunkDisplay.Label}"
+					Tooltip: "{$Mods.PixelSandbox.Config.EnableChunkDisplay.Tooltip}"
+				}
+
+				EnableDebug: {
+					Label: "{$Mods.PixelSandbox.Config.EnableDebugMessage.Label}"
+					Tooltip: "{$Mods.PixelSandbox.Config.EnableDebugMessage.Tooltip}"
+				}
+			}
 		}
 	}
 }

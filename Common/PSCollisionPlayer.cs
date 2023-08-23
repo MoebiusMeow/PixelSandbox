@@ -28,7 +28,7 @@ namespace PixelSandbox
         float localClimbSpeed;
         bool localStandOnSand;
 
-        public override void OnEnterWorld(Player Player)
+        public override void OnEnterWorld()
         {
             localCollided = -1;
         }

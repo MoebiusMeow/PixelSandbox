@@ -22,7 +22,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
         public override SoundStyle EndSound => SoundID.Item32;
 
         public override float CleanerRadius => 100;
-        public override float Centrifuge => 0.4f * Main.player[Item.playerIndexTheItemIsReservedFor].itemAnimation / Item.useAnimation;
+        public override float Centrifuge => 0.4f;
 
         public override void SetDefaults()
         {
@@ -66,7 +66,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
     {
         public override string Texture => $"Terraria/Images/Projectile_{ProjectileID.DD2DarkMageRaise}";
 
-        // public override string Texture => (typeof(SandBag).Namespace + "." + "SandBag").Replace('.', '/');
+        public BoneCleanerProjectile() => Behavior.Update = GenerateSand;
 
         public override void SetStaticDefaults()
         {
@@ -76,12 +76,13 @@ namespace PixelSandbox.Contents.Items.Cleaners
         public override void SetDefaults()
         {
             base.SetDefaults();
-            Projectile.CloneDefaults(ProjectileID.SandBallFalling);
+            Projectile.CloneDefaults(ProjectileID.WaterBolt);
             Projectile.aiStyle = -1;
             Projectile.timeLeft = 160;
             Projectile.width = Projectile.height = 82;
             Projectile.friendly = true;
             Projectile.tileCollide = false;
+            Projectile.netImportant = true;
             DrawOriginOffsetX = 0;
             DrawOriginOffsetY = 0;
         }
@@ -93,7 +94,6 @@ namespace PixelSandbox.Contents.Items.Cleaners
 
         public override void OnSpawn(IEntitySource source)
         {
-            Behavior.Update = GenerateSand;
             Projectile.rotation = Main.rand.NextFloatDirection();
             Projectile.scale = 0.1f;
             base.OnSpawn(source);

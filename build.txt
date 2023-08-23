@@ -1,3 +1,3 @@
 ﻿displayName = Pixel Sandbox 像素沙盒 (OpenSource)
 author = MoebiusMeow
-version = 1.1
+version = 1.1.5

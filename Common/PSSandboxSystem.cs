@@ -95,10 +95,10 @@ namespace PixelSandbox
         public override void Load()
         {
             behaviorShader = Mod.Assets.Request<Effect>(behaviorShaderPath, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
-            On.Terraria.Graphics.Effects.FilterManager.EndCapture += ScreenEffectDecorator;
-            On.Terraria.Main.DrawCachedNPCs += DrawHook_DrawCachedNPCs;
-            On.Terraria.Lighting.GetColor_int_int += LightColorDecorator;
-            On.Terraria.Collision.StepDown += Collision_StepDown;
+            Terraria.Graphics.Effects.On_FilterManager.EndCapture += ScreenEffectDecorator;
+            Terraria.On_Main.DrawCachedNPCs += DrawHook_DrawCachedNPCs;
+            Terraria.On_Lighting.GetColor_int_int += LightColorDecorator;
+            Terraria.On_Collision.StepDown += Collision_StepDown;
 
             tilePaintSystem = Main.instance.TilePaintSystem;
             tileDrawing = new TileDrawing(tilePaintSystem);
@@ -110,12 +110,12 @@ namespace PixelSandbox
             base.Load();
         }
 
-        private void Collision_StepDown(On.Terraria.Collision.orig_StepDown orig, ref Vector2 position, ref Vector2 velocity, int width, int height, ref float stepSpeed, ref float gfxOffY, int gravDir, bool waterWalk)
+        private void Collision_StepDown(Terraria.On_Collision.orig_StepDown orig, ref Vector2 position, ref Vector2 velocity, int width, int height, ref float stepSpeed, ref float gfxOffY, int gravDir, bool waterWalk)
         {
             orig(ref position, ref velocity, width, height, ref stepSpeed, ref gfxOffY, gravDir, waterWalk);
         }
 
-        private void DrawHook_DrawCachedNPCs(On.Terraria.Main.orig_DrawCachedNPCs orig, Main self, List<int> npcCache, bool behindTiles)
+        private void DrawHook_DrawCachedNPCs(Terraria.On_Main.orig_DrawCachedNPCs orig, Main self, List<int> npcCache, bool behindTiles)
         {
             if (npcCache == Main.instance.DrawCacheNPCsBehindNonSolidTiles)
             {
@@ -128,10 +128,10 @@ namespace PixelSandbox
 
         public override void Unload()
         {
-            On.Terraria.Graphics.Effects.FilterManager.EndCapture -= ScreenEffectDecorator;
-            On.Terraria.Lighting.GetColor_int_int -= LightColorDecorator;
-            On.Terraria.Main.DrawCachedNPCs -= DrawHook_DrawCachedNPCs;
-            On.Terraria.Collision.StepDown -= Collision_StepDown;
+            Terraria.Graphics.Effects.On_FilterManager.EndCapture -= ScreenEffectDecorator;
+            Terraria.On_Lighting.GetColor_int_int -= LightColorDecorator;
+            Terraria.On_Main.DrawCachedNPCs -= DrawHook_DrawCachedNPCs;
+            Terraria.On_Collision.StepDown -= Collision_StepDown;
 
             Main.QueueMainThreadAction(() =>
             {
@@ -146,7 +146,7 @@ namespace PixelSandbox
             base.Unload();
         }
 
-        public Color LightColorDecorator(On.Terraria.Lighting.orig_GetColor_int_int orig, int i, int j)
+        public Color LightColorDecorator(Terraria.On_Lighting.orig_GetColor_int_int orig, int i, int j)
         {
             if (chunkFullLight)
                 return Color.White;
@@ -302,6 +302,8 @@ namespace PixelSandbox
 
             device.SetRenderTarget(effectRTSwap);
             // device.Clear(Color.Transparent);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
+            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, Vector2.Zero, new Rectangle(0, 0, effectSize.X, effectSize.Y), Color.Transparent);
             foreach (var chunk in recentChunks) if (PSChunk.IsChunkReady(chunk))
             {
                 // var relativeTL = (topLeft - chunk.TopLeft + Vector2.One * PSChunk.CHUNK_PADDING).ToPoint();
@@ -310,11 +312,12 @@ namespace PixelSandbox
                 var frame = PSChunk.SandArea;
                 frame.Width = Math.Min(frame.Width, (int)(bottomRight.X - chunk.TopLeft.X + PSChunk.CHUNK_PADDING) / PSChunk.SAND_SIZE);
                 frame.Height = Math.Min(frame.Height, (int)(bottomRight.Y - chunk.TopLeft.Y + PSChunk.CHUNK_PADDING) / PSChunk.SAND_SIZE);
-                Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
+                // Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
                 Main.spriteBatch.Draw(chunk.content, (chunk.TopLeft - topLeft) / PSChunk.SAND_SIZE, 
                     frame, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
-                Main.spriteBatch.End();
+                // Main.spriteBatch.End();
             }
+            Main.spriteBatch.End();
 
             callback(device, topLeft, bottomRight);
 
@@ -419,7 +422,7 @@ namespace PixelSandbox
             base.PostUpdateEverything();
         }
 
-        public void ScreenEffectDecorator(On.Terraria.Graphics.Effects.FilterManager.orig_EndCapture orig,
+        public void ScreenEffectDecorator(Terraria.Graphics.Effects.On_FilterManager.orig_EndCapture orig,
                                           Terraria.Graphics.Effects.FilterManager self,
                                           RenderTarget2D finalTexture, RenderTarget2D screenTarget1,
                                           RenderTarget2D screenTarget2, Color clearColor)

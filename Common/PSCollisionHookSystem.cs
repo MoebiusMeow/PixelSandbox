@@ -32,11 +32,11 @@ namespace PixelSandbox
 
         public override void Load()
         {
-            On.Terraria.Collision.StepDown += Collision_StepDown;
+            Terraria.On_Collision.StepDown += Collision_StepDown;
             base.Load();
         }
 
-        private void Collision_StepDown(On.Terraria.Collision.orig_StepDown orig, ref Vector2 position, ref Vector2 velocity, int width, int height, ref float stepSpeed, ref float gfxOffY, int gravDir, bool waterWalk)
+        private void Collision_StepDown(Terraria.On_Collision.orig_StepDown orig, ref Vector2 position, ref Vector2 velocity, int width, int height, ref float stepSpeed, ref float gfxOffY, int gravDir, bool waterWalk)
         {
             if (!noStepDown)
                 orig(ref position, ref velocity, width, height, ref stepSpeed, ref gfxOffY, gravDir, waterWalk);

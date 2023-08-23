@@ -21,7 +21,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
         public override string Texture => (GetType().Namespace + "." + "VacuumCleanerBase").Replace('.', '/');
 
         public override float CleanerRadius => 82;
-        public override float Centrifuge => 0.2f * Main.player[Item.playerIndexTheItemIsReservedFor].itemAnimation / Item.useAnimation;
+        public override float Centrifuge => 0.2f;
 
         public override void AddRecipes()
         {

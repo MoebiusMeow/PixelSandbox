@@ -43,6 +43,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
             float sandIncrease = 0;
             // 捕获局部变量来获取返回值
             float radius = 0.50f;
+            float Centrifuge = this.Centrifuge * player.itemAnimation / Item.useAnimation;
 
             var callback = (GraphicsDevice device, Vector2 topLeft, Vector2 bottomRight) =>
             {
@@ -103,6 +104,8 @@ namespace PixelSandbox.Contents.Items.Cleaners
                                         newData[dupLast[targetIndex]] = data[dupLast[targetIndex]];
                                     dupLast[targetIndex] = i + j * effectSize.X;
                                 }
+                                // 这个else也要加才能让沙子不变少，但是为了让吸尘效果更流畅直接吞
+                                // else newData[i + j * effectSize.X] = data[i + j * effectSize.X];
                             }
                             else
                             {
@@ -154,7 +157,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
             cleaner.sandCount += sandIncrease;
             if (!player.controlUseItem && player.itemAnimation == 1)
                 SoundEngine.PlaySound(EndSound, player.Center);
-            if (cleaner.sandBagFilled > lastBags)
+            if (cleaner.sandBagFilled > lastBags && player.whoAmI == Main.myPlayer)
             {
                 var message = "{0} ".FormatWith(cleaner.sandBagFilled) +
                     PixelSandbox.ModTranslate(cleaner.sandBagFilled > 1 ? "SandBagsFilledHint" : "SandBagFilledHint", "Misc.");
@@ -261,7 +264,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
         {
             if (sandBagFilled > 0)
             {
-                Item.NewItem(new EntitySource_ItemOpen(Item, Type), player.getRect(), ModContent.ItemType<SandBag>(), sandBagFilled, default, default, true);
+                player.QuickSpawnItem(Item.GetSource_FromThis(), ModContent.ItemType<SandBag>(), sandBagFilled);
                 sandCount = sandInNextBag;
             }
         }

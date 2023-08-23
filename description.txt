@@ -1,5 +1,8 @@
 ﻿[c/00FF00:Pixel Sandbox 像素沙盒]
 
+Available on 1.4.4 tML
+已更新至1.4.4 tModLoader
+
 A mod that adds a interactable falling sand system (similar to Noita) using GPU and chunk loading.
 The sand area can be as large as the whole world.
 为全世界添加使用GPU计算和区块加载的高效落沙系统（类似Noita）。
@@ -7,6 +10,7 @@ The sand area can be as large as the whole world.
 This is an [c/FFFF00:Open Source Mod (under MIT License)]! Feel free to use these code in your own project!
 本MOD[c/FFFF00:完全开源（MIT协议）]，你可以任意扣代码放到自己Mod里
 
+v1.1.2: Minor multiplayer patches. Now sandbags and cleaners should be properly synced. Also some sprite update.
 v1.1: Bug fix, performance improvement, content expansion, vacuum cleaners revamped
 
 Features:
@@ -24,6 +28,7 @@ Items:
 + Basic Vacuum Cleaner: Craft with 20 wood. You can use this tool to collect sand (producing sandbags).
 + More vacuum cleaner variants: Craft with sandbags and other ingredients
 + Sandbag: Can be extracted for various loots. Can be thrown to generate sand.
++ Sand Bomb & Anti-Sand Bomb
 
 
 
@@ -35,7 +40,7 @@ Warnings:
 
 Mail: MoebiusMeow@gmail.com
 
-Version 1.1.0
+Version 1.1.5
 by Moebius Meow
 
 
@@ -54,6 +59,7 @@ by Moebius Meow
 + 基础吸尘器: 材料是20个木头。可以用来收集沙子产生沙袋
 + 更多吸尘器变体：用沙袋和其他一些材料制造
 + 沙袋: 可以在提炼机提取产生各种物品。也可以扔出产生沙子。
++ 沙尘炸弹和除尘炸弹
 
 
 注意事项：
