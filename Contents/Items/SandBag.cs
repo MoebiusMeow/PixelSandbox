@@ -116,14 +116,14 @@ namespace PixelSandbox.Contents.Items
         public override void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) {
 			Vector2 spriteSize = frame.Size() * scale;
 
-			spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Vector2(position.X, position.Y + spriteSize.Y * 0.9f),
+			spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Vector2(position.X - spriteSize.X * 0.5f, position.Y + spriteSize.Y * 0.6f),
 				new Rectangle(0, 0, 1, 1), Color.Red, 0f, Vector2.Zero,
 				new Vector2(spriteSize.X, 2f),
 				SpriteEffects.None, 0);
 
             float rem = Item.stack * remain - MathF.Floor(Item.stack * remain);
             // lastVisualScale = MathHelper.Lerp(lastVisualScale, (rem == 0 ? 1 : rem) + 1, 0.1f);
-            spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Vector2(position.X, position.Y + spriteSize.Y * 0.9f),
+            spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Vector2(position.X - spriteSize.X * 0.5f, position.Y + spriteSize.Y * 0.6f),
 				new Rectangle(0, 0, 1, 1), Color.LightGreen, 0f, Vector2.Zero,
 				new Vector2(spriteSize.X * (rem == 0 ? 1 : rem), 2f),
 				SpriteEffects.None, 0);

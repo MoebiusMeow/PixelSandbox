@@ -17,6 +17,8 @@ namespace PixelSandbox
 {
     public class PSGlobalTile : GlobalTile
     {
+        private static FieldInfo _spriteBatchBeginCalled = null;
+
         public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
             int idx = (int)(i * 16 / PSChunk.CHUNK_WIDTH_INNER);
@@ -32,6 +34,14 @@ namespace PixelSandbox
 
                 if (ThreadCheck.IsMainThread)
                 {
+                    _spriteBatchBeginCalled ??= typeof(SpriteBatch).GetField("beginCalled", BindingFlags.Instance | BindingFlags.NonPublic);
+                    bool beginCalled = (bool)_spriteBatchBeginCalled.GetValue(Main.spriteBatch);
+                    if (beginCalled)
+                    {
+                        // Prevent sand spawning during other draw call
+                        return;
+                    }
+
                     var origTargets = Main.graphics.GraphicsDevice.GetRenderTargets();
                     PSSandboxSystem.Instance.EnsureSingleChunk(idx, idy, false);
                     PSSandboxSystem.Instance.MarkRecent(chunk);

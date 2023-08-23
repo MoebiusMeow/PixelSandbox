@@ -1,0 +1,225 @@
+Items: {
+	SandBag: {
+		DisplayName: 沙袋
+		Tooltip:
+			'''
+			收集好的一袋沙子 (可以扔出)
+			[c/00FF00:重要：可被提炼机提取]
+			[c/00FF00:这是大多数落沙相关材料的来源]
+			‘尘沙掩埋着所有的秘密’
+			'''
+	}
+
+	VacuumCleaner: {
+		DisplayName: 阿尔法原型吸尘机
+		Tooltip:
+			'''
+			据说这是所有魔法吸尘器最早的原型机
+			你可以感受到其中荒蛮的魔法能量正在脉动
+			[c/FFFF00:不能]收集沙子
+			‘听我说，那些沙丘会移动...’
+			'''
+	}
+
+	VacuumCleanerWood: {
+		DisplayName: 木制清沙器
+		Tooltip:
+			'''
+			清理沙子的基础工具
+			通过快速摇晃桶子产生真空区域吸引沙子
+			可以收集沙粒，产生{$Mods.PixelSandbox.Items.SandBag.DisplayName} :sandbag:
+			[c/00FF00:在背包右键取出装满的沙袋]
+			‘你认真的？’
+			'''
+	}
+
+	VacuumCleanerIron: {
+		DisplayName: 吸尘器
+		Tooltip:
+			'''
+			一台先进的矮人工艺吸尘器
+			可以收集沙粒，产生{$Mods.PixelSandbox.Items.SandBag.DisplayName} :sandbag:
+			[c/00FF00:在背包右键取出装满的沙袋]
+			‘一位沙子女巫！’
+			'''
+	}
+
+	VacuumCleanerBone: {
+		DisplayName: 噬尘印记
+		Tooltip:
+			'''
+			召唤一个吞噬沙粒的黑暗传送门
+			但是当传送门破碎的时候会遗留黑暗碎屑
+			可以收集沙粒，产生{$Mods.PixelSandbox.Items.SandBag.DisplayName} :sandbag:
+			[c/00FF00:在背包右键取出装满的沙袋]
+			‘以眼还眼，以尘报尘’
+			'''
+	}
+
+	VacuumCleanerHallow: {
+		DisplayName: 拂月清辉
+		Tooltip:
+			'''
+			释放吸收沙粒的辉光
+			辉光会呈弦月形状前进
+			可以收集沙粒，产生{$Mods.PixelSandbox.Items.SandBag.DisplayName} :sandbag:
+			[c/00FF00:在背包右键取出装满的沙袋]
+			‘江天一色无纤尘，皎皎空中孤月轮’
+			'''
+	}
+
+	TatteredSpellTome: {
+		DisplayName: 破旧的魔典
+		Tooltip:
+			'''
+			从沙堆中出土的破旧魔法典籍
+			也许以后有用
+			'''
+	}
+
+	RaidingErosionTome: {
+		DisplayName: 砂蚀岩袭
+		// Tooltip: ""
+	}
+
+	SandBomb: {
+		DisplayName: 落沙炸弹
+		Tooltip:
+			'''
+			可以生成落沙的炸弹
+			接触落沙的瞬间会提前爆炸
+			'''
+	}
+
+	SandBombAnti: {
+		DisplayName: 反落沙炸弹
+		Tooltip:
+			'''
+			可以清除落沙的炸弹
+			接触落沙的瞬间会提前爆炸
+			在不需要收集沙子时很适合用于清理场地
+			'''
+	}
+
+	StrangeStatue: {
+		DisplayName: 奇怪的砂质人像
+		Tooltip:
+			'''
+			不知道是谁的砂质人像
+			可以用于制作一些特殊配方
+			具有工作台和炼药桌的功能
+			‘伟大之作’
+			'''
+	}
+
+	CosmosViscoseTome: {
+		// DisplayName: Cosmos Viscose Tome
+		// Tooltip: ""
+	}
+
+	HollowTome: {
+		// DisplayName: Hollow Tome
+		// Tooltip: ""
+	}
+
+	PacingMagmaTome: {
+		// DisplayName: Pacing Magma Tome
+		// Tooltip: ""
+	}
+}
+
+Tiles.StrangeStatueTile.MapEntry: "{$Mods.PixelSandbox.Items.StrangeStatue.DisplayName}"
+
+Configs: {
+	Configs: 设置
+	Performance: 性能设置
+	Debug: 调试功能
+
+	SandboxConfig: {
+		// DisplayDisplayName: "{$Mods.PixelSandbox.Configs.Configs}"
+
+		ChunkCount: {
+			Label: 理想区块个数
+			Tooltip: 活跃区块数超出这个界限时，会从最久未访问的区块开始卸载。(默认 20)
+		}
+
+		UnloadDelay: {
+			Label: 理想卸载延迟
+			Tooltip: <X> 秒未访问后卸载区块，即使没有超过理想区块数。 (默认 3)
+		}
+
+		ScreenPadding: {
+			Label: 屏幕边缘扩展
+			Tooltip: 在离屏幕边缘还有一段距离时提前加载区块，设大了会影响性能。 (默认 60)
+		}
+
+		LightingInterval: {
+			Label: 光照更新频率
+			Tooltip: 降低沙子光照频率仅能稍微提升性能，代价是沙子上的光照看起来有延迟。
+		}
+
+		EnableChunkDisplay: {
+			Label: 显示区块边缘
+			Tooltip: 用白色网格显示区块边缘
+		}
+
+		EnableDebugMessage: {
+			Label: 开启调试交互
+			Tooltip: 例如，使用扔出键T来创造沙子
+		}
+
+		EnableDebug: {
+			// Label: Enable Debug
+			// Tooltip: ""
+		}
+
+		DisplayName: "{$Mods.PixelSandbox.Configs.Configs}"
+	}
+}
+
+Misc: {
+	SandBagContains: 内含
+	SandBagFilled: 个装满的沙袋
+	SandBagsFilled: 个装满的沙袋
+	SandBagCurrent: 当前沙袋填充
+	SandBagCurrentFilled: ""
+	SandBagFilledHint: 袋!
+	SandBagsFilledHint: 袋!
+}
+
+Projectiles: {
+	BoneCleanerProjectile: {
+		// DisplayDisplayName: Bone Cleaner Projectile
+		// DisplayName: Bone Cleaner Projectile
+	}
+
+	HallowCleanerGlow: {
+		// DisplayDisplayName: Hallow Cleaner Glow
+		// DisplayName: Hallow Cleaner Glow
+	}
+
+	HallowCleanerProjectile: {
+		// DisplayDisplayName: Hallow Cleaner Projectile
+		// DisplayName: Hallow Cleaner Projectile
+	}
+
+	SandBagProjectile: {
+		// DisplayDisplayName: Sand Bag Projectile
+		// DisplayName: Sand Bag Projectile
+	}
+
+	RaidingErosionTomeProjectile: {
+		// DisplayDisplayName: Raiding Erosion Tome Projectile
+		// DisplayName: Raiding Erosion Tome Projectile
+	}
+
+	SandBombAntiProjectile: {
+		// DisplayDisplayName: Sand Bomb Anti Projectile
+		// DisplayName: Sand Bomb Anti Projectile
+	}
+
+	SandBombProjectile: {
+		// DisplayDisplayName: Sand Bomb Projectile
+		// DisplayName: Sand Bomb Projectile
+	}
+}

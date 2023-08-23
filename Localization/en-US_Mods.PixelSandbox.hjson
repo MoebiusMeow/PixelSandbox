@@ -1,0 +1,225 @@
+Items: {
+	SandBag: {
+		DisplayName: Sandbag
+		Tooltip:
+			'''
+			A bag of collected sand (can be poured out)
+			[c/00FF00:Important: Can be used at Extractinator]
+			[c/00FF00:This is where most of the sand-related materials come from]
+			‘The sand holds all the mysteries’
+			'''
+	}
+
+	VacuumCleaner: {
+		DisplayName: The Prototype Cleaner Alpha
+		Tooltip:
+			'''
+			It is said to be the first prototype of all magical vacuum cleaners
+			You can feel the untamed power flowing inside the machine
+			Does [c/FFFF00:not] collect sand
+			‘Listen to me, the dune are moving...’
+			'''
+	}
+
+	VacuumCleanerWood: {
+		DisplayName: Wooden Sand Cleaner
+		Tooltip:
+			'''
+			A basic tool to clean sand
+			Creates a small vacuum area by rapidly shaking a bucket
+			Can be used to collect sand, producing {$Mods.PixelSandbox.Items.SandBag.DisplayName} :sandbag:
+			[c/00FF00:Right click in inventory to take out filled bags]
+			‘Seriously?’
+			'''
+	}
+
+	VacuumCleanerIron: {
+		DisplayName: Vacuum Cleaner
+		Tooltip:
+			'''
+			An advanced dwarf-tech vacuum cleaner
+			Can be used to collect sand, producing {$Mods.PixelSandbox.Items.SandBag.DisplayName} :sandbag:
+			[c/00FF00:Right click in inventory to take out filled bags]
+			‘A sand witch!’
+			'''
+	}
+
+	VacuumCleanerBone: {
+		DisplayName: Sigil of Vacuum
+		Tooltip:
+			'''
+			Summons a dark portal to vacuum a larger area of sand
+			However, it leaves dark powder when the portal is broken
+			Can be used to collect sand, producing {$Mods.PixelSandbox.Items.SandBag.DisplayName} :sandbag:
+			[c/00FF00:Right click in inventory to take out filled bags]
+			‘Eye for eye, dust for dust’
+			'''
+	}
+
+	VacuumCleanerHallow: {
+		DisplayName: Whisking Moonlight
+		Tooltip:
+			'''
+			Unleash sand-absorbing moonlight
+			The moonlight will advance in a crescent shape
+			Can be used to collect sand, producing {$Mods.PixelSandbox.Items.SandBag.DisplayName} :sandbag:
+			[c/00FF00:Right click in inventory to take out filled bags]
+			‘No dust has stained the water blending with the skies, A lonely wheel-like moon shines brilliant far and wide’
+			'''
+	}
+
+	TatteredSpellTome: {
+		DisplayName: Tattered Spell Tome
+		Tooltip:
+			'''
+			Tattered spell tome that unearthed from the sand
+			Might be useful in the future
+			'''
+	}
+
+	RaidingErosionTome: {
+		DisplayName: Raiding Erosion
+		Tooltip: ""
+	}
+
+	SandBomb: {
+		DisplayName: Sand Bomb
+		Tooltip:
+			'''
+			A bomb that generates sand
+			Explodes immediately when contact with sand
+			'''
+	}
+
+	SandBombAnti: {
+		DisplayName: Anti-Sand Bomb
+		Tooltip:
+			'''
+			A bomb that destroy sand
+			Explodes immediately when contact with sand
+			Useful in cleaning areas if you don't need to collect sand
+			'''
+	}
+
+	StrangeStatue: {
+		DisplayName: Strange Sandy Figure
+		Tooltip:
+			'''
+			A sandy statue of an unknown figure
+			Can be used for some special recipes
+			Count as workbench and alchemy table
+			‘The Great Work’
+			'''
+	}
+
+	CosmosViscoseTome: {
+		DisplayName: Cosmos Viscose Tome
+		Tooltip: ""
+	}
+
+	HollowTome: {
+		DisplayName: Hollow Tome
+		Tooltip: ""
+	}
+
+	PacingMagmaTome: {
+		DisplayName: Pacing Magma Tome
+		Tooltip: ""
+	}
+}
+
+Tiles.StrangeStatueTile.MapEntry: "{$Mods.PixelSandbox.Items.StrangeStatue.DisplayName}"
+
+Configs: {
+	Configs: Configs
+	Performance: Performance
+	Debug: Debug
+
+	SandboxConfig: {
+		DisplayDisplayName: "{$Mods.PixelSandbox.Configs.Configs}"
+
+		ChunkCount: {
+			Label: Preferred Chunk Count
+			Tooltip: Starts to unload least recently visited chunks when exceeded. (default 20)
+		}
+
+		UnloadDelay: {
+			Label: Preferred Unload Delay
+			Tooltip: Starts to unload a chunk after <X> seconds since last visit, regardless with chunk count. (default 3)
+		}
+
+		ScreenPadding: {
+			Label: Screen Padding
+			Tooltip: Load chunks within a distance of screen. A larger number would affect performance. (default 60)
+		}
+
+		LightingInterval: {
+			Label: Lighting Frequency
+			Tooltip: Decreasing lighting frequency can slightly improve performance, at the cost of lagging lighting effect.
+		}
+
+		EnableChunkDisplay: {
+			Label: Show Chunk Border
+			Tooltip: Display borders of each chunks
+		}
+
+		EnableDebugMessage: {
+			Label: Enable Debug Features
+			Tooltip: e.g. Use 'Throw' to create sand
+		}
+
+		EnableDebug: {
+			Label: Enable Debug
+			Tooltip: ""
+		}
+
+		DisplayName: Sandbox Config
+	}
+}
+
+Misc: {
+	SandBagContains: Contains
+	SandBagFilled: filled sandbag
+	SandBagsFilled: filled sandbags
+	SandBagCurrent: Current Sandbag
+	SandBagCurrentFilled: filled
+	SandBagFilledHint: Sandbag Filled!
+	SandBagsFilledHint: Sandbags Filled!
+}
+
+Projectiles: {
+	BoneCleanerProjectile: {
+		DisplayDisplayName: Bone Cleaner Projectile
+		DisplayName: Bone Cleaner Projectile
+	}
+
+	HallowCleanerGlow: {
+		DisplayDisplayName: Hallow Cleaner Glow
+		DisplayName: Hallow Cleaner Glow
+	}
+
+	HallowCleanerProjectile: {
+		DisplayDisplayName: Hallow Cleaner Projectile
+		DisplayName: Hallow Cleaner Projectile
+	}
+
+	SandBagProjectile: {
+		DisplayDisplayName: Sand Bag Projectile
+		DisplayName: Sand Bag Projectile
+	}
+
+	RaidingErosionTomeProjectile: {
+		DisplayDisplayName: Raiding Erosion Tome Projectile
+		DisplayName: Raiding Erosion Tome Projectile
+	}
+
+	SandBombAntiProjectile: {
+		DisplayDisplayName: Sand Bomb Anti Projectile
+		DisplayName: Sand Bomb Anti Projectile
+	}
+
+	SandBombProjectile: {
+		DisplayDisplayName: Sand Bomb Projectile
+		DisplayName: Sand Bomb Projectile
+	}
+}

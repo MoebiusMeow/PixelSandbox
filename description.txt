@@ -10,8 +10,8 @@ The sand area can be as large as the whole world.
 This is an [c/FFFF00:Open Source Mod (under MIT License)]! Feel free to use these code in your own project!
 本MOD[c/FFFF00:完全开源（MIT协议）]，你可以任意扣代码放到自己Mod里
 
+v1.1.5: Update to 1.4.4 tML. Fix crashes when using Fargo Mod or torch god blessing
 v1.1.2: Minor multiplayer patches. Now sandbags and cleaners should be properly synced. Also some sprite update.
-v1.1: Bug fix, performance improvement, content expansion, vacuum cleaners revamped
 
 Features:
 + Powder is generated whenever a tile is destroyed

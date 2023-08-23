@@ -223,7 +223,7 @@ namespace PixelSandbox.Contents.Items.Cleaners
         {
             Main.spriteBatch.End();
             BlendState blend = BlendState.Additive;
-            blend.ColorBlendFunction = BlendFunction.ReverseSubtract;
+            // blend.ColorBlendFunction = BlendFunction.ReverseSubtract;
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, blend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
             lightColor *= 0.6f;
             return base.PreDraw(ref lightColor);
